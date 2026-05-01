@@ -1,0 +1,72 @@
+name: Bug Report
+about: Melde einen reproduzierbaren Fehler im Projekt
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke fuer deinen Report. Bitte fuelle alle relevanten Felder aus.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vorab-Checks
+      options:
+        - label: Ich habe bestehende Issues durchsucht.
+          required: true
+        - label: Ich nutze die aktuellste Release-Version.
+          required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Betroffener Bereich
+      options:
+        - SkyMP Server Runtime (TypeScript)
+        - Papyrus Script (YacaBridgeQuest)
+        - GitHub CI/Release Workflow
+        - TeamSpeak/YaCA Integration
+        - Unklar
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Verwendete Version
+      description: Z.B. v0.1.0
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Fehlerbeschreibung
+      description: Was passiert und was sollte stattdessen passieren?
+      placeholder: Kurze und praezise Beschreibung
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Schritte zum Reproduzieren
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevante Logs
+      description: Bitte relevante Auszuege aus Server-Log, Papyrus.0.log oder CI-Run einfuegen.
+      render: shell
+  - type: input
+    id: environment
+    attributes:
+      label: Umgebung
+      description: OS, Node-Version, SkyMP-Version, TeamSpeak-Version
+      placeholder: Windows 11, Node 20.x, SkyMP ..., TeamSpeak ...
+  - type: textarea
+    id: additional
+    attributes:
+      label: Sonstiges
+      description: Weitere Details, Screenshots oder Hinweise

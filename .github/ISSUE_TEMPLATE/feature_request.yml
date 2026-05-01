@@ -1,0 +1,51 @@
+name: Feature Request
+about: Schlage eine neue Funktion oder Verbesserung vor
+labels: [enhancement, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke fuer den Vorschlag. Beschreibe bitte Problem und Nutzen moeglichst konkret.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem soll geloest werden?
+      placeholder: Ich moechte ..., weil ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Loesungsvorschlag
+      placeholder: So koennte die Funktion aussehen ...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativen
+      description: Welche Workarounds/Alternativen gibt es aktuell?
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Erwarteter Impact
+      options:
+        - Niedrig
+        - Mittel
+        - Hoch
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Bereich
+      options:
+        - label: TypeScript Runtime
+        - label: Papyrus Script
+        - label: Config/Deployment
+        - label: CI/Release
+  - type: textarea
+    id: additional
+    attributes:
+      label: Zusatzinfos
+      description: Beispiele, Mockups, API-Ideen, Referenzen

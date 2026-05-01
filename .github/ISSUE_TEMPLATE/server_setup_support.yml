@@ -1,0 +1,68 @@
+name: Server Setup Support
+about: Hilfe bei Installation, Konfiguration oder Deployment fuer Serverbetreiber
+labels: [support, server-setup, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dieses Formular hilft bei Setup-/Deploy-Problemen fuer SkyMP + YaCA.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Vorab-Checks
+      options:
+        - label: Ich habe die README gelesen und die Schritte befolgt.
+          required: true
+        - label: Ich habe den Papyrus Build fuer YacaBridgeQuest.pex ausgefuehrt.
+          required: true
+  - type: input
+    id: release
+    attributes:
+      label: Verwendete Release-Version
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: setup_area
+    attributes:
+      label: Wo tritt das Problem auf?
+      options:
+        - Serverstart
+        - Konfigurationsladen
+        - Papyrus/PEX Deployment
+        - TeamSpeak/YaCA Verbindung
+        - Voice Range / Keybind Verhalten
+        - Release ZIP Deployment
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      placeholder: Was sollte funktionieren?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsaechliches Verhalten
+      placeholder: Was passiert stattdessen?
+    validations:
+      required: true
+  - type: textarea
+    id: config_excerpt
+    attributes:
+      label: config.json (anonymisierter Auszug)
+      description: Bitte Passwoerter/Serverdaten schwärzen.
+      render: json
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server- und Papyrus-Logs
+      description: Relevante Fehlermeldungen einfuegen.
+      render: shell
+  - type: input
+    id: environment
+    attributes:
+      label: Umgebung
+      placeholder: Ubuntu 24.04, Node 20.x, SkyMP ..., TeamSpeak ...

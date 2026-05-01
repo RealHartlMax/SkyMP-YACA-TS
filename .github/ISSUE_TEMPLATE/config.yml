@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Sicherheitsproblem melden
+    url: https://github.com/RealHartlMax/SkyMP-YACA-TS/security/advisories/new
+    about: Bitte keine Sicherheitsluecken als oeffentliches Issue melden.
+  - name: YaCA TeamSpeak Plugin
+    url: https://yaca.systems
+    about: Plugin Download und Basisinformationen.
