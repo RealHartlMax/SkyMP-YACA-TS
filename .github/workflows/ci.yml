@@ -7,6 +7,43 @@ on:
   pull_request:
 
 jobs:
+  commit-prefix:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    name: Validate commit prefixes
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit subjects
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Checking commit subjects in range: $BASE_SHA..$HEAD_SHA"
+          COMMITS=$(git log --format=%s "$BASE_SHA..$HEAD_SHA")
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits found in PR range. Skipping."
+            exit 0
+          fi
+
+          echo "Commit subjects:"
+          echo "$COMMITS"
+
+          INVALID=$(echo "$COMMITS" | grep -Ev '^\[(fix|feat|major)\]' || true)
+          if [ -n "$INVALID" ]; then
+            echo "The following commit subjects are invalid:"
+            echo "$INVALID"
+            echo "Each commit subject must start with one of: [fix], [feat], [major]"
+            exit 1
+          fi
+
+          echo "All commit subjects use valid prefixes."
+
   typecheck:
     runs-on: ubuntu-latest
     name: TypeScript Typecheck

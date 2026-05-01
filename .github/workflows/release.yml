@@ -1,11 +1,11 @@
 name: Release
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
-      version:
-        description: "Version to release (e.g. 1.0.0)"
-        required: true
       prerelease:
         description: "Is this a prerelease?"
         required: true
@@ -41,19 +41,87 @@ jobs:
           echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
+      - name: Determine next version from commit prefixes
+        id: versioning
+        run: |
+          LAST_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1)
+
+          if [ -z "$LAST_TAG" ]; then
+            echo "No previous tag found. Starting at v0.1.0"
+            echo "version=0.1.0" >> $GITHUB_OUTPUT
+            echo "tag=v0.1.0" >> $GITHUB_OUTPUT
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          COMMITS=$(git log --format=%s "$LAST_TAG..HEAD")
+          echo "Commit subjects since $LAST_TAG:"
+          echo "$COMMITS"
+
+          BUMP="none"
+          if echo "$COMMITS" | grep -Eq '^\[major\]'; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -Eq '^\[feat\]'; then
+            BUMP="minor"
+          elif echo "$COMMITS" | grep -Eq '^\[fix\]'; then
+            BUMP="patch"
+          fi
+
+          if [ "$BUMP" = "none" ]; then
+            echo "No release prefix found. Expected commit subjects to start with [fix], [feat], or [major]."
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          VERSION=${LAST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          if [ "$BUMP" = "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [ "$BUMP" = "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "Detected bump: $BUMP -> v$NEXT_VERSION"
+          echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "should_release=true" >> $GITHUB_OUTPUT
+
       - name: Install dependencies
+        if: steps.versioning.outputs.should_release == 'true'
         run: npm ci
 
       - name: Bump package version
+        if: steps.versioning.outputs.should_release == 'true'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          npm version ${{ inputs.version }} --no-git-tag-version
+          npm version ${{ steps.versioning.outputs.version }} --no-git-tag-version
+
+      - name: Create and push git tag
+        if: steps.versioning.outputs.should_release == 'true'
+        run: |
+          TAG_NAME="${{ steps.versioning.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists on origin."
+          else
+            git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+            git push origin "$TAG_NAME"
+            echo "Created and pushed tag $TAG_NAME"
+          fi
 
       - name: Build TypeScript
+        if: steps.versioning.outputs.should_release == 'true'
         run: npm run build
 
       - name: Bundle release artifact
+        if: steps.versioning.outputs.should_release == 'true'
         run: |
           mkdir -p release/skymp-yaca-ts
           mkdir -p release/skymp-yaca-ts/skymp5-scripts
@@ -61,15 +129,16 @@ jobs:
           cp -r skymp5-scripts/pex/          release/skymp-yaca-ts/skymp5-scripts/pex
           cp    config.json                  release/skymp-yaca-ts/config.json
           cp    package.json                 release/skymp-yaca-ts/package.json
-          cd release && zip -r ../skymp-yaca-ts-v${{ inputs.version }}.zip ./skymp-yaca-ts
+          cd release && zip -r ../skymp-yaca-ts-v${{ steps.versioning.outputs.version }}.zip ./skymp-yaca-ts
 
       - name: Create GitHub Release
+        if: steps.versioning.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ inputs.version }}"
-          name: "v${{ inputs.version }}"
-          prerelease: ${{ inputs.prerelease }}
+          tag_name: "${{ steps.versioning.outputs.tag }}"
+          name: "${{ steps.versioning.outputs.tag }}"
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || false }}
           generate_release_notes: true
-          files: skymp-yaca-ts-v${{ inputs.version }}.zip
+          files: skymp-yaca-ts-v${{ steps.versioning.outputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
