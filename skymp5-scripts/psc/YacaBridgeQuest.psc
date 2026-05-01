@@ -1,10 +1,10 @@
 Scriptname YacaBridgeQuest extends Quest
 
-; Minimal bridge state inspired by yaca-systems/fivem-yaca-typescript.
-; This script is intentionally small and focused on voice state synchronization.
+; Bridge state inspired by yaca-systems/fivem-yaca-typescript.
+; Supports 8 configurable voice range stages and key bindings loaded from config.json via the TS layer.
 
 Int Property PluginState = 0 Auto
-Float Property VoiceRange = 150.0 Auto
+Float Property VoiceRange = 3.0 Auto
 Bool Property VoiceRangeChangeAllowed = True Auto
 Bool Property MicrophoneMuted = False Auto
 Bool Property SoundMuted = False Auto
@@ -13,14 +13,90 @@ Int Property RadioChannel = 0 Auto
 Bool Property PhoneCallActive = False Auto
 Int Property PhonePeerRemoteId = -1 Auto
 
-Float Property VoiceRangeNear = 150.0 Auto
-Float Property VoiceRangeNormal = 400.0 Auto
-Float Property VoiceRangeFar = 1000.0 Auto
+; Voice range stages (up to 8, set by TS layer from config.json)
+Float Property VoiceRangeStage0 = 1.0 Auto
+Float Property VoiceRangeStage1 = 3.0 Auto
+Float Property VoiceRangeStage2 = 8.0 Auto
+Float Property VoiceRangeStage3 = 15.0 Auto
+Float Property VoiceRangeStage4 = 20.0 Auto
+Float Property VoiceRangeStage5 = 25.0 Auto
+Float Property VoiceRangeStage6 = 30.0 Auto
+Float Property VoiceRangeStage7 = 40.0 Auto
+Int Property VoiceRangeCount = 8 Auto
 Int Property VoiceRangeIndex = 1 Auto
+
+; Key bindings (set by TS layer from config.json)
+String Property KeyIncreaseRange = "ADD" Auto
+String Property KeyDecreaseRange = "SUBTRACT" Auto
+String Property KeyRadioPrimary = "N" Auto
+String Property KeyRadioSecondary = "CAPITAL" Auto
+String Property KeyMegaphone = "B" Auto
 
 Event OnInit()
     Debug.Trace("[YacaBridgeQuest] OnInit")
+    RegisterForKey(GetKeyCode(KeyIncreaseRange))
+    RegisterForKey(GetKeyCode(KeyDecreaseRange))
+    RegisterForKey(GetKeyCode(KeyRadioPrimary))
+    RegisterForKey(GetKeyCode(KeyRadioSecondary))
+    RegisterForKey(GetKeyCode(KeyMegaphone))
 EndEvent
+
+; Called by the TS layer after setting key properties, to re-register with updated keys
+Function RefreshKeyBindings()
+    UnregisterForAllKeys()
+    RegisterForKey(GetKeyCode(KeyIncreaseRange))
+    RegisterForKey(GetKeyCode(KeyDecreaseRange))
+    RegisterForKey(GetKeyCode(KeyRadioPrimary))
+    RegisterForKey(GetKeyCode(KeyRadioSecondary))
+    RegisterForKey(GetKeyCode(KeyMegaphone))
+    Debug.Trace("[YacaBridgeQuest] Key bindings refreshed")
+EndFunction
+
+Event OnKeyDown(Int keyCode)
+    If keyCode == GetKeyCode(KeyIncreaseRange)
+        CycleVoiceRange(True)
+    ElseIf keyCode == GetKeyCode(KeyDecreaseRange)
+        CycleVoiceRange(False)
+    ElseIf keyCode == GetKeyCode(KeyRadioPrimary)
+        SetRadioTransmitting(True, RadioChannel)
+    ElseIf keyCode == GetKeyCode(KeyRadioSecondary)
+        SetRadioTransmitting(True, 1)
+    ElseIf keyCode == GetKeyCode(KeyMegaphone)
+        SetMegaphoneActive(True)
+    EndIf
+EndEvent
+
+Event OnKeyUp(Int keyCode)
+    If keyCode == GetKeyCode(KeyRadioPrimary)
+        SetRadioTransmitting(False, RadioChannel)
+    ElseIf keyCode == GetKeyCode(KeyRadioSecondary)
+        SetRadioTransmitting(False, 1)
+    ElseIf keyCode == GetKeyCode(KeyMegaphone)
+        SetMegaphoneActive(False)
+    EndIf
+EndEvent
+
+; Returns the current voice range stage value by index
+Float Function GetVoiceRangeStage(Int index)
+    If index == 0
+        Return VoiceRangeStage0
+    ElseIf index == 1
+        Return VoiceRangeStage1
+    ElseIf index == 2
+        Return VoiceRangeStage2
+    ElseIf index == 3
+        Return VoiceRangeStage3
+    ElseIf index == 4
+        Return VoiceRangeStage4
+    ElseIf index == 5
+        Return VoiceRangeStage5
+    ElseIf index == 6
+        Return VoiceRangeStage6
+    ElseIf index == 7
+        Return VoiceRangeStage7
+    EndIf
+    Return VoiceRangeStage1
+EndFunction
 
 Function SetPluginState(Int newState)
     If PluginState == newState
@@ -54,25 +130,21 @@ Function CycleVoiceRange(Bool increase = True)
         Return
     EndIf
 
+    Int maxIndex = VoiceRangeCount - 1
+
     If increase
         VoiceRangeIndex += 1
-        If VoiceRangeIndex > 2
+        If VoiceRangeIndex > maxIndex
             VoiceRangeIndex = 0
         EndIf
     Else
         VoiceRangeIndex -= 1
         If VoiceRangeIndex < 0
-            VoiceRangeIndex = 2
+            VoiceRangeIndex = maxIndex
         EndIf
     EndIf
 
-    If VoiceRangeIndex == 0
-        SetVoiceRange(VoiceRangeNear)
-    ElseIf VoiceRangeIndex == 1
-        SetVoiceRange(VoiceRangeNormal)
-    Else
-        SetVoiceRange(VoiceRangeFar)
-    EndIf
+    SetVoiceRange(GetVoiceRangeStage(VoiceRangeIndex))
 EndFunction
 
 Function SetMicrophoneMuted(Bool muted)
@@ -97,6 +169,21 @@ Function SetRadioState(Bool active, Int channel = 0)
     RadioActive = active
     RadioChannel = channel
     Debug.Trace("[YacaBridgeQuest] Radio active=" + active + ", channel=" + channel)
+EndFunction
+
+Function SetRadioTransmitting(Bool transmitting, Int channel)
+    Debug.Trace("[YacaBridgeQuest] RadioTransmitting=" + transmitting + ", channel=" + channel)
+EndFunction
+
+Bool Property MegaphoneActive = False Auto
+
+Function SetMegaphoneActive(Bool active)
+    If MegaphoneActive == active
+        Return
+    EndIf
+
+    MegaphoneActive = active
+    Debug.Trace("[YacaBridgeQuest] Megaphone=" + active)
 EndFunction
 
 Function StartPhoneCall(Int peerRemoteId)
@@ -124,3 +211,4 @@ Function ApplySnapshot(Int newPluginState, Float newVoiceRange, Bool canChangeRa
 
     Debug.Trace("[YacaBridgeQuest] Snapshot applied")
 EndFunction
+

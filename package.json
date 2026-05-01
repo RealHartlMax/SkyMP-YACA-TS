@@ -1,0 +1,14 @@
+{
+  "name": "skymp-yaca-ts",
+  "version": "1.0.0",
+  "description": "SkyMP YACA voice bridge",
+  "main": "dist/yacaBridge.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/yacaBridge.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

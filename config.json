@@ -1,0 +1,31 @@
+{
+  "teamspeak": {
+    "serverUrl": "ts.yourserver.com",
+    "serverPort": 9987,
+    "serverPassword": "",
+    "defaultChannel": "AFK / Waiting",
+    "ingameChannel": "Ingame",
+    "ingameChannelPassword": ""
+  },
+  "yaca": {
+    "pluginVersion": "1.0.0",
+    "uniqueServerId": "YOUR_UNIQUE_SERVER_ID",
+    "ingameChannelId": 1,
+    "useWhisper": false
+  },
+  "voiceRanges": {
+    "ranges": [1.0, 3.0, 8.0, 15.0, 20.0, 25.0, 30.0, 40.0],
+    "defaultIndex": 1
+  },
+  "radio": {
+    "defaultChannel": 0,
+    "maxChannels": 9
+  },
+  "keyBinds": {
+    "increaseVoiceRange": "ADD",
+    "decreaseVoiceRange": "SUBTRACT",
+    "primaryRadioTransmit": "N",
+    "secondaryRadioTransmit": "CAPITAL",
+    "megaphone": "B"
+  }
+}

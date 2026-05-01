@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.0.0)"
+        required: true
+      prerelease:
+        description: "Is this a prerelease?"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Build and Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install archive tools
+        run: sudo apt-get install -y zip
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Get variables
+        id: get_vars
+        run: |
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump package version
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm version ${{ inputs.version }} --no-git-tag-version
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Bundle release artifact
+        run: |
+          mkdir -p release/skymp-yaca-ts
+          mkdir -p release/skymp-yaca-ts/skymp5-scripts
+          cp -r dist/                        release/skymp-yaca-ts/dist
+          cp -r skymp5-scripts/pex/          release/skymp-yaca-ts/skymp5-scripts/pex
+          cp    config.json                  release/skymp-yaca-ts/config.json
+          cp    package.json                 release/skymp-yaca-ts/package.json
+          cd release && zip -r ../skymp-yaca-ts-v${{ inputs.version }}.zip ./skymp-yaca-ts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ inputs.version }}"
+          name: "v${{ inputs.version }}"
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
+          files: skymp-yaca-ts-v${{ inputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
