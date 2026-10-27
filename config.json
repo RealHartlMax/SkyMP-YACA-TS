@@ -8,9 +8,11 @@
     "ingameChannelPassword": ""
   },
   "yaca": {
-    "pluginVersion": "1.0.0",
     "uniqueServerId": "YOUR_UNIQUE_SERVER_ID",
-    "ingameChannelId": 1,
+    "ingameChannelId": 3,
+    "defaultChannelId": 1,
+    "ingameChannelPassword": "",
+    "excludeChannels": [],
     "useWhisper": false
   },
   "voiceRanges": {
@@ -19,13 +21,22 @@
   },
   "radio": {
     "defaultChannel": 0,
-    "maxChannels": 9
+    "maxChannels": 9,
+    "secondaryChannel": 1
   },
   "keyBinds": {
     "increaseVoiceRange": "ADD",
     "decreaseVoiceRange": "SUBTRACT",
     "primaryRadioTransmit": "N",
-    "secondaryRadioTransmit": "CAPITAL",
-    "megaphone": "B"
+    "secondaryRadioTransmit": "CAPITAL"
+  },
+  "client": {
+    "webSocketUrl": "ws://127.0.0.1:30125/",
+    "updateIntervalMs": 250,
+    "unitsPerMeter": 70
+  },
+  "ui": {
+    "title": "SkyMP Voice",
+    "toggleKey": "F8"
   }
 }

@@ -3,9 +3,14 @@
   "version": "1.0.0",
   "description": "SkyMP YACA voice bridge",
   "main": "dist/yacaBridge.js",
+  "types": "dist/yacaBridge.d.ts",
+  "engines": { "node": ">=22" },
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/yacaBridge.js"
+    "build": "tsc && node tools/build-ui.cjs && node tools/build-plugin.cjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.cjs",
+    "preview": "npm run build && node tools/preview.cjs",
+    "start": "node tools/preview.cjs"
   },
   "devDependencies": {
     "typescript": "^5.4.0",

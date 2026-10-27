@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Get variables
@@ -116,20 +116,29 @@ jobs:
             echo "Created and pushed tag $TAG_NAME"
           fi
 
-      - name: Build TypeScript
+      - name: Build and test
         if: steps.versioning.outputs.should_release == 'true'
-        run: npm run build
+        run: npm test
 
       - name: Bundle release artifact
         if: steps.versioning.outputs.should_release == 'true'
         run: |
           mkdir -p release/skymp-yaca-ts
-          mkdir -p release/skymp-yaca-ts/skymp5-scripts
           cp -r dist/                        release/skymp-yaca-ts/dist
-          cp -r skymp5-scripts/pex/          release/skymp-yaca-ts/skymp5-scripts/pex
+          cp -r src ui tools docs tests      release/skymp-yaca-ts/
+          cp README.md LICENSE tsconfig.json package-lock.json plugin.json release/skymp-yaca-ts/
           cp    config.json                  release/skymp-yaca-ts/config.json
           cp    package.json                 release/skymp-yaca-ts/package.json
-          cd release && zip -r ../skymp-yaca-ts-v${{ steps.versioning.outputs.version }}.zip ./skymp-yaca-ts
+          mkdir -p release/Plugins/skymp-yaca-ts/sources
+          cp dist/plugin/* release/Plugins/skymp-yaca-ts/
+          cp docs/PLUGIN-INSTALL.md release/Plugins/skymp-yaca-ts/README.md
+          cp LICENSE release/Plugins/skymp-yaca-ts/
+          cp -r docs release/Plugins/skymp-yaca-ts/
+          cp -r src ui tools tests docs release/Plugins/skymp-yaca-ts/sources/
+          cp package.json package-lock.json config.json plugin.json tsconfig.json README.md LICENSE release/Plugins/skymp-yaca-ts/sources/
+          cd release
+          zip -r ../skymp-yaca-ts-v${{ steps.versioning.outputs.version }}.zip ./skymp-yaca-ts
+          zip -r ../skymp-yaca-ts-plugin-v${{ steps.versioning.outputs.version }}.zip ./Plugins
 
       - name: Create GitHub Release
         if: steps.versioning.outputs.should_release == 'true'
@@ -139,6 +148,8 @@ jobs:
           name: "${{ steps.versioning.outputs.tag }}"
           prerelease: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || false }}
           generate_release_notes: true
-          files: skymp-yaca-ts-v${{ steps.versioning.outputs.version }}.zip
+          files: |
+            skymp-yaca-ts-v${{ steps.versioning.outputs.version }}.zip
+            skymp-yaca-ts-plugin-v${{ steps.versioning.outputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

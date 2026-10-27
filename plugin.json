@@ -1,0 +1,9 @@
+{
+  "name": "skymp-yaca-ts",
+  "version": "1.0.0",
+  "kind": "gamemode",
+  "displayName": "YACA Voice",
+  "description": "YACA / TeamSpeak voice bridge with proximity audio, radio and an in-game SkyrimPlatform overlay.",
+  "main": "server.js",
+  "optional": true
+}

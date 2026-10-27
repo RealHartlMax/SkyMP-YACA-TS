@@ -1,0 +1,21 @@
+<div class="voice-shell">
+  <button class="hud" id="hud" aria-label="Spracheinstellungen öffnen" aria-expanded="false">
+    <span class="signal" id="hud-signal"><i></i><i></i><i></i><i></i></span>
+    <span class="hud-label">STIMME <strong id="hud-range">3 m</strong></span>
+    <span class="status-dot" id="hud-dot"></span><kbd id="hud-key">F8</kbd>
+  </button>
+  <section class="panel" id="panel" aria-label="Spracheinstellungen" hidden>
+    <header class="panel-header"><div><span class="eyebrow">YACA / SKYRIM MULTIPLAYER</span><h1 id="title">SkyMP Voice</h1></div><button class="close" id="close" aria-label="Spracheinstellungen schließen">Esc</button></header>
+    <div class="connection" id="connection" role="status" aria-live="polite"><span class="status-dot" id="status-dot"></span><div><strong id="status-title">Warte auf SkyMP</strong><p id="status-text">Die Verbindung wird vorbereitet.</p></div></div>
+    <div class="section-heading"><h2>Deine Stimme</h2><span class="speaking" id="speaking">Bereit</span></div>
+    <div class="range-readout"><span id="range-name">Normal</span><strong id="range-value">3<span> m</span></strong></div>
+    <div class="range-buttons" id="ranges" role="group" aria-label="Sprachreichweite"></div>
+    <p class="hint" id="range-hint">Mit + / − die Reichweite wechseln.</p>
+    <div class="sound-states"><div><span>Mikrofon</span><strong id="mic">—</strong></div><div><span>Wiedergabe</span><strong id="sound">—</strong></div></div>
+    <p class="hint">Mikrofon und Wiedergabe steuerst du in TeamSpeak.</p>
+    <div class="section-heading radio-heading"><h2>Funkgerät</h2><button class="power" id="radio-power" aria-pressed="false">Ausgeschaltet</button></div>
+    <fieldset id="radio-fields" disabled><div class="channels"><label>Hauptkanal<select id="primary" aria-label="Hauptkanal"></select></label><label>Zweitkanal<select id="secondary" aria-label="Zweitkanal"></select></label></div><label class="volume-label">Funklautstärke <output id="volume-output">70 %</output><input type="range" id="volume" aria-label="Funklautstärke" min="0" max="100" value="70"></label></fieldset>
+    <div class="transmission" id="transmission"><span class="tx-dot"></span><span id="tx-text">Funk ausgeschaltet</span></div>
+    <footer><span id="keys">N halten: Sprechen · Caps: Zweitkanal</span><span class="preview" id="preview" hidden>VORSCHAU</span></footer>
+  </section>
+</div>

@@ -55,7 +55,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -75,17 +75,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build and run bridge/protocol tests
+        run: npm test
 
       - name: Verify dist output
-        run: test -f dist/yacaBridge.js
+        run: test -f dist/yacaBridge.js && test -f dist/yacaBridge.d.ts && test -f dist/ui/overlay.js && test -f dist/plugin/server.js && test -f dist/plugin/plugin.json
 
   validate-config:
     runs-on: ubuntu-latest

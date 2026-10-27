@@ -1,0 +1,35 @@
+:host { all: initial; color-scheme: dark; font: 14px/1.5 "Segoe UI", Arial, sans-serif; color: #eeeae0; --accent: #d9ba7a; --muted: #a29e94; --line: rgba(214,201,170,.15); }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button, select, input { font: inherit; }
+button, select { color: inherit; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+button:disabled, fieldset:disabled { opacity: .45; cursor: default; }
+.voice-shell { position: fixed; right: 28px; top: 26px; width: 384px; max-width: calc(100vw - 32px); z-index: 650; pointer-events: none; }
+.hud { pointer-events: auto; display: flex; align-items: center; gap: 14px; margin-left: auto; padding: 11px 14px; border: 1px solid var(--line); border-radius: 6px; background: rgba(23,25,27,.94); box-shadow: 0 8px 30px #0003; }
+.hud:hover, .close:hover { border-color: #d9ba7a70; }
+.hud-label { font-size: 10px; letter-spacing: .14em; color: var(--muted); }
+.hud-label strong { font-size: 14px; font-weight: 500; color: #eeeae0; letter-spacing: 0; margin-left: 7px; }
+kbd { border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; color: var(--muted); font: 10px/1.5 inherit; }
+.signal { display: flex; align-items: center; gap: 3px; height: 20px; }
+.signal i { display: block; width: 3px; background: #82735b; height: 7px; border-radius: 2px; }
+.signal i:nth-child(2) { height: 13px; }.signal i:nth-child(3) { height: 19px; }.signal i:nth-child(4) { height: 10px; }
+.signal.talking i { background: #b8d6a2; animation: pulse .55s ease-in-out infinite alternate; }.signal.talking i:nth-child(2n) { animation-delay: -.3s; }
+@keyframes pulse { to { transform: scaleY(.45); } }
+.status-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #c08f6a; }.status-dot.online { background: #b2cd9a; box-shadow: 0 0 10px #b2cd9a40; }
+.panel { pointer-events: auto; margin-top: 12px; background: linear-gradient(145deg,rgba(33,35,37,.98),rgba(22,25,28,.98)); border: 1px solid #9c896a50; border-top: 2px solid var(--accent); border-radius: 7px; padding: 25px; box-shadow: 0 18px 60px #0007; max-height: calc(100vh - 104px); overflow-y: auto; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; }
+.eyebrow { font-size: 9px; letter-spacing: .19em; color: var(--accent); }h1 { font: 500 25px/1.3 Georgia,"Times New Roman",serif; letter-spacing: .015em; margin: 5px 0 0; }
+.close { align-self: flex-start; border: 1px solid var(--line); border-radius: 4px; background: transparent; padding: 3px 8px; color: var(--muted); font-size: 10px; margin-top: 3px; }
+.connection { display: flex; align-items: flex-start; gap: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 4px; background: #13161966; }.connection .status-dot { margin-top: 7px; }.connection strong { font-weight: 500; font-size: 13px; }.connection p { font-size: 11px; color: var(--muted); margin: 3px 0 0; line-height: 1.6; overflow-wrap: anywhere; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 25px 0 10px; }h2 { font-size: 12px; font-weight: 500; margin: 0; letter-spacing: .025em; }.speaking { font-size: 10px; color: var(--muted); }.speaking.active { color: #b2cd9a; }
+.range-readout { display: flex; justify-content: space-between; align-items: baseline; margin: 9px 0 13px; }.range-readout > span { color: var(--muted); font-size: 12px; }.range-readout strong { font-size: 31px; line-height: 1.3; font-weight: 300; color: var(--accent); }.range-readout strong span { font-size: 15px; }
+.range-buttons { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }.range-buttons button { padding: 8px 2px; background: transparent; border: 1px solid var(--line); border-radius: 3px; font-size: 11px; color: #cbc6bc; }.range-buttons button[aria-pressed="true"] { background: #d9ba7a1c; border-color: #d9ba7a99; color: #e5cb97; }.range-buttons button:hover { border-color: #d9ba7a80; }
+.hint { color: #94928c; font-size: 10px; margin: 10px 0 0; line-height: 1.6; }.sound-states { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 4px; margin-top: 20px; }.sound-states div { display: flex; flex-direction: column; gap: 4px; padding: 11px 13px; }.sound-states div + div { border-left: 1px solid var(--line); }.sound-states span { color: var(--muted); font-size: 10px; }.sound-states strong { font-size: 11px; font-weight: 500; }.sound-states .muted { color: #d9a089; }
+.radio-heading { padding-top: 20px; border-top: 1px solid var(--line); margin-top: 22px; }.power { padding: 3px 8px; font-size: 10px; border: 1px solid var(--line); background: transparent; border-radius: 20px; color: var(--muted); }.power[aria-pressed="true"] { color: var(--accent); border-color: #d9ba7a60; background: #d9ba7a0c; }
+fieldset { border: 0; padding: 0; margin: 15px 0 0; min-width: 0; }.channels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }label { display: block; font-size: 10px; color: var(--muted); }select { display: block; width: 100%; margin-top: 6px; border: 1px solid var(--line); border-radius: 4px; padding: 8px 9px; background: #171a1d; font-size: 12px; }.volume-label { margin-top: 17px; }output { float: right; color: #d3c7b0; }input[type="range"] { display: block; width: 100%; accent-color: var(--accent); margin: 12px 0 4px; height: 4px; cursor: pointer; }
+.transmission { display: flex; gap: 7px; align-items: center; font-size: 10px; color: var(--muted); margin-top: 17px; }.tx-dot { width: 5px; height: 5px; border: 1px solid #7a796f; border-radius: 50%; }.transmission.active { color: #b2cd9a; }.transmission.active .tx-dot { background: #b2cd9a; border-color: #b2cd9a; }
+footer { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); margin-top: 21px; padding-top: 14px; font-size: 9px; color: #99968e; }.preview { letter-spacing: .08em; color: var(--accent); }
+@media (max-width: 480px) { .voice-shell { top: 14px; right: 16px; }.panel { padding: 20px; max-height: calc(100vh - 86px); } }
+@media (prefers-reduced-motion: reduce) { .signal.talking i { animation: none; } }
