@@ -46,6 +46,14 @@ TeamSpeak mit YACA-Plugin und passende TeamSpeak-Kanal-IDs.
    Ein reines Mikrofon-Mute darf ihn nicht auslösen. Bilddatei austauschen,
    Gameserver neu starten und das neue Bild prüfen. Skyrim-Menüs, Chat und
    Serverwechsel dürfen keinen festhängenden Eingabefokus hinterlassen.
+7. Aus Tamriel eine noch nicht geladene Taverne betreten und wieder zurückgehen.
+   Auch bei Ladezeiten über 3 bzw. 12 Sekunden muss die bestehende
+   TeamSpeak-/YACA-Verbindung erhalten bleiben. Während des Ladens darf die alte
+   Hörerliste nicht weiterverwendet werden; nach dem Laden müssen räumliche
+   Sprache und Status ohne erneuten Kanalbeitritt weiterlaufen. Zusätzlich
+   während des Ladens TeamSpeak wirklich trennen bzw. einen ausgeschlossenen
+   Kanal betreten: Nach der Rückkehr muss der passende Hinweis erscheinen und
+   eine echte Trennung weiterhin automatisch wiederverbunden werden.
 
 Es werden keine PEX-Dateien installiert und keine Quest benötigt. Vorhandene
 Server-Einstellungen, Spielstände und Gamemode-Logik bleiben in der lokalen

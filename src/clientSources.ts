@@ -61,6 +61,12 @@ s.browserHandler = sp.on('browserMessage', function (event) {
 });
 var tick = function () {
   if (!alive()) return;
+  if (sp.mpClientPlugin && !sp.mpClientPlugin.isConnected()) {
+    execute('window.SkyMpYaca && window.SkyMpYaca.stop()');
+    if (sp.unsubscribe) sp.unsubscribe(s.browserHandler);
+    delete sp.storage.skympYaca;
+    return;
+  }
   sp.once('update', tick);
   var now = Date.now();
   if (s.owner && s.owner.disabled) {
@@ -91,10 +97,19 @@ var tick = function () {
   s.keys = pressed;
   if (now - s.lastFrame < owner.config.client.updateIntervalMs) return;
   s.lastFrame = now;
+  var deliver = function (frame) { execute('window.SkyMpYaca && window.SkyMpYaca.receive(' + JSON.stringify(frame) + ')'); };
   var player = sp.Game.getPlayer();
-  if (!player) return;
-  var frame = { owner: owner, local: sample(player, owner.config.client.unitsPerMeter), peers: [] };
-  var localSpace = space(player);
+  if (!player || (sp.Ui && sp.Ui.isMenuOpen('Loading Menu'))) {
+    s.neighbors = {};
+    deliver({ owner: owner, suspended: true });
+    return;
+  }
+  var localSpace;
+  var local;
+  try { localSpace = space(player); local = sample(player, owner.config.client.unitsPerMeter); }
+  catch (_) { localSpace = ''; }
+  if (!localSpace) { s.neighbors = {}; deliver({ owner: owner, suspended: true }); return; }
+  var frame = { owner: owner, local: local, peers: [] };
   Object.keys(s.neighbors).forEach(function (id) {
     var n = s.neighbors[id];
     if (now - n.seen > 1000) { delete s.neighbors[id]; return; }
@@ -104,7 +119,7 @@ var tick = function () {
       frame.peers.push({ clientId: n.peer.clientId, voiceRange: n.peer.voiceRange, position: p.position, direction: p.direction });
     } catch (_) { delete s.neighbors[id]; }
   });
-  execute('window.SkyMpYaca && window.SkyMpYaca.receive(' + JSON.stringify(frame) + ')');
+  deliver(frame);
 };
 sp.once('update', tick);
 `;

@@ -88,8 +88,14 @@ Eine erfolgreiche `OK`/`JOIN`-Antwort bestätigt bereits den Beitritt und die
 Client-ID. Eine zusätzliche initiale `MOVED_CHANNEL`-Meldung ist dafür nicht
 erforderlich. Spätere Kanalwechsel, falscher Server und Verbindungsabbruch
 werden weiterhin ausgewertet.
-Der Hinweis nimmt keinen Maus-/Tastaturfokus und öffnet kein Menü. Bei ausbleibenden Spielframes
-wird die Anzeige nach etwa 3–4 Sekunden entfernt.
+Der Hinweis nimmt keinen Maus-/Tastaturfokus und öffnet kein Menü. Bei einem
+Ladebildschirm oder ausbleibenden Spielframes wird die Anzeige ausgeblendet.
+Die lokale YACA-Verbindung und der bestätigte Kanalbeitritt bleiben dabei
+erhalten. Bis aktuelle Positionsdaten eintreffen, werden räumliche Sprache und
+die bisherige Hörerliste ausgesetzt. Ein längerer Zell-/Weltwechsel löst dadurch
+keine künstliche TeamSpeak-Trennung aus. Echte Socket-/Kanalfehler werden
+weiterhin ausgewertet; ein Spielserver-Disconnect oder Plugin-Abbau beendet
+die Verbindung.
 
 Das mitgelieferte schwebende Kristallbild lässt sich ohne Neubau ändern:
 

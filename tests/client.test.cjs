@@ -88,3 +88,60 @@ test('client stops on bridge disposal and stops forwarding frozen server snapsho
   tick();tick();
   assert.equal(scripts.filter(s=>s==='window.SkyMpYaca && window.SkyMpYaca.stop()').length,1);
 });
+
+test('loading cells suspend spatial sampling, resume in the new cell and still stop on a real server disconnect', t => {
+  let now = 100000, loading = false, connected = true, playerPresent = true, hasCell = true, cellThrows = false;
+  let interior = false, samples = 0;
+  t.mock.method(Date, 'now', () => now);
+  const f = fixture(); f.join(101, 11);
+  const pending = [], frames = [], scripts = [], unsubscribed = [];
+  const ref = {
+    getPositionX: () => { samples++; return 70; }, getPositionY: () => 140, getPositionZ: () => 210, getAngleZ: () => 0,
+    getParentCell: () => {
+      if (cellThrows) throw new Error('cell is unloading');
+      return hasCell ? { isInterior: () => interior, getFormID: () => interior ? 2 : 1 } : null;
+    },
+    getWorldSpace: () => hasCell && !interior ? { getFormID: () => 10 } : null,
+  };
+  const sp = { storage: {}, once: (_, cb) => pending.push(cb), on: () => 1, unsubscribe: id => unsubscribed.push(id),
+    mpClientPlugin: { isConnected: () => connected },
+    browser: { executeJavaScript: code => {
+      scripts.push(code);
+      if (code.startsWith('window.SkyMpYaca && window.SkyMpYaca.receive('))
+        new Function('window', code)({ SkyMpYaca: { receive: frame => frames.push(frame) } });
+    }, isFocused: () => false, setFocused() {}, setVisible() {} },
+    Utility: { isInMenuMode: () => loading }, Ui: { isMenuOpen: name => loading && name === 'Loading Menu' },
+    Input: { isKeyPressed: () => false }, Game: { getPlayer: () => playerPresent ? ref : null } };
+  const ctx = { sp, sendEvent: payload => {
+    f.event(101, payload);
+    new Function('ctx', f.properties.yacaOwner.updateOwner)({ ...ctx, value: f.owner(101) });
+  } };
+  new Function('ctx', f.sources._yacaClient)(ctx);
+  const tick = () => { now += 300; const cb = pending.shift(); assert.ok(cb); cb(); };
+  tick();
+  assert.equal(frames.at(-1).local.position.x, 1);
+  loading = true;
+  const before = samples;
+  tick();
+  assert.equal(frames.at(-1).suspended, true);
+  assert.equal(samples, before); // Loading Menu never samples the unloading player.
+  now += 45000;
+  tick();
+  assert.equal(frames.at(-1).suspended, true);
+  loading = false; interior = true;
+  tick();
+  assert.equal(frames.at(-1).suspended, undefined);
+  assert.deepEqual(frames.at(-1).peers, []);
+  assert.equal(scripts.includes('window.SkyMpYaca && window.SkyMpYaca.stop()'), false);
+  for (const unavailable of ['player', 'cell', 'throw']) {
+    playerPresent = unavailable !== 'player'; hasCell = unavailable !== 'cell'; cellThrows = unavailable === 'throw';
+    tick();
+    assert.equal(frames.at(-1).suspended, true);
+  }
+  connected = false;
+  tick();
+  assert.equal(scripts.at(-1), 'window.SkyMpYaca && window.SkyMpYaca.stop()');
+  assert.deepEqual(unsubscribed, [1]);
+  assert.equal(sp.storage.skympYaca, undefined);
+  assert.equal(pending.length, 0);
+});

@@ -1,7 +1,7 @@
 /* Runs in the existing SkyrimPlatform browser. ASSETS is supplied by build-ui.cjs. */
 (function () {
   'use strict';
-  var overlayVersion = '2026-10-28-ui-core-v2';
+  var overlayVersion = '2026-10-30-loading-pause-v1';
   if (window.SkyMpYaca) {
     if (window.SkyMpYaca.version === overlayVersion) return;
     window.SkyMpYaca.stop();
@@ -21,6 +21,7 @@
   var $ = function (id) { return root.getElementById(id); };
   var owner = null, bridgeId = null, socket = null, retry = null, connectTimer = null;
   var opened = false, stopped = false, lastFrame = 0, lastReport = 0, rangeSignature = '', error = '';
+  var suspended = false, lastLocal = null;
   var plugin = freshPlugin();
   var failedImage = null;
   var states = {
@@ -47,7 +48,7 @@
   }
   function online() { return plugin.pluginState === 'IN_INGAME_CHANNEL' && plugin.clientId !== null; }
   function micMuted() { return plugin.microphoneMuted || plugin.microphoneDisabled; }
-  function effectivelyTalking() { return online() && plugin.talking && !micMuted() && !plugin.soundMuted && !plugin.soundDisabled; }
+  function effectivelyTalking() { return !suspended && online() && plugin.talking && !micMuted() && !plugin.soundMuted && !plugin.soundDisabled; }
   function report() {
     if (stopped || !owner || owner.preview) return;
     lastReport = Date.now();
@@ -60,6 +61,15 @@
     socket = null;
     if (previous) { previous.onclose = null; previous.onopen = null; previous.onmessage = null; previous.onerror = null; previous.close(); }
     plugin = freshPlugin();
+    lastLocal = null;
+  }
+  function pauseSpatial() {
+    suspended = true;
+    setOpen(false); view.hidden = true;
+    // A loading screen pauses native updates, not TeamSpeak. Keep its socket
+    // and confirmed JOIN, but stop using the previous cell's proximity data.
+    if (online() && lastLocal)
+      send(protocol.spatial({ local: lastLocal, peers: [] }, 0, true));
   }
   function scheduleReconnect() {
     if (stopped || !owner || owner.preview || Date.now() - lastFrame > 3000 || retry) return;
@@ -169,14 +179,23 @@
   }
   function receive(frame) {
     if (stopped || !frame || !frame.owner || !frame.owner.config || !frame.owner.state) return;
-    lastFrame = Date.now(); view.hidden = false;
+    var resumed = suspended || (owner && Date.now() - lastFrame > 3000);
+    lastFrame = Date.now();
     if (bridgeId !== frame.owner.bridgeId) { disconnect(); bridgeId = frame.owner.bridgeId; error = ''; }
     owner = frame.owner;
+    suspended = frame.suspended === true;
+    if (suspended) pauseSpatial();
+    else view.hidden = false;
     if (owner.preview) plugin = Object.assign(freshPlugin(), owner.state);
     else {
       connect();
-      if (online() && frame.local && Array.isArray(frame.peers))
-        send(protocol.spatial(frame, owner.config.voiceRanges.ranges[owner.state.rangeIndex], micMuted()));
+      if (!suspended && frame.local && Array.isArray(frame.peers)) {
+        lastLocal = frame.local;
+        if (online()) send(protocol.spatial(frame, owner.config.voiceRanges.ranges[owner.state.rangeIndex], micMuted()));
+      }
+      // The server may have expired our voice session during a long native
+      // pause. Restore the actual plugin status as soon as frames resume.
+      if (resumed && !suspended) report();
     }
     render();
   }
@@ -205,9 +224,7 @@
   var interval = setInterval(function () {
     emit({ type: 'heartbeat' });
     if (!owner || owner.preview) return;
-    if (Date.now() - lastFrame > 3000) {
-      disconnect(); setOpen(false); view.hidden = true; return;
-    }
+    if (suspended || Date.now() - lastFrame > 3000) pauseSpatial();
     if (Date.now() - lastReport >= 2000) report();
   }, 1000);
   function stop() {
