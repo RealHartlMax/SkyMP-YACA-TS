@@ -17,14 +17,21 @@ export interface YacaBridgeConfig {
     pluginVersion?: string;
   };
   voiceRanges: { ranges: number[]; defaultIndex: number };
-  radio: { defaultChannel: number; maxChannels: number; secondaryChannel: number | null };
   keyBinds: {
+    cycleVoiceRange: string;
     increaseVoiceRange: string;
     decreaseVoiceRange: string;
-    primaryRadioTransmit: string;
-    secondaryRadioTransmit: string;
-    megaphone?: string;
   };
   client: { webSocketUrl: string; updateIntervalMs: number; unitsPerMeter: number };
-  ui: { title: string; toggleKey: string };
+  ui: {
+    title: string;
+    toggleKey: string;
+    connectionOverlay: {
+      imagePath: string;
+      imageUrl: string;
+      imageAlt: string;
+      message: string;
+      backgroundOpacity: number;
+    };
+  };
 }

@@ -36,11 +36,12 @@ function loadForkHelpers(statuses) {
   const stateModule={exports:{}};
   new Function('require','module','exports',transpile(fs.readFileSync(path.join(fork,'skymp5-server','ts','pluginDiscoveryState.ts'),'utf8')))(require,stateModule,stateModule.exports);
   const state=stateModule.exports;
+  const publication = require('./load-fork-runtime.cjs')(fork, ts);
   const ui={updatePluginRuntimeStatus:(name,status)=>statuses.push({name,status})};
-  const code=transpile(selected.join('\n'))+'\nreturn {discoverPlugins,bootstrapPlugins};';
-  const helpers=new Function('fs','os','path','crypto','ui','readDiscoveryState','writeDiscoveryState','PLUGINS_DIR','installShutdownHooks','askToEnablePlugin','runProcessPlugin','require',code)(
+  const code=transpile(selected.join('\n'))+'\nreturn {discoverPlugins,bootstrapPlugins: (server, options) => bootstrapPlugins(server, {dataDir: path.join(process.cwd(), "data"), ...options})};';
+  const helpers=new Function('fs','os','path','crypto','ui','readDiscoveryState','writeDiscoveryState','PLUGINS_DIR','installShutdownHooks','askToEnablePlugin','runProcessPlugin', 'publishPluginRuntimeSelection', 'publishStartedPluginRuntime', 'validatePluginRuntime', 'require',code)(
     fs,os,path,crypto,ui,state.readDiscoveryState,state.writeDiscoveryState,state.PLUGINS_DIR,
-    ()=>{},()=>{throw new Error('Unexpected interactive prompt');},()=>{throw new Error('Unexpected process plugin');},require);
+    ()=>{},()=>{throw new Error('Unexpected interactive prompt');},()=>{throw new Error('Unexpected process plugin');}, publication.publishPluginRuntimeSelection, publication.publishStartedPluginRuntime, publication.validatePluginRuntime, require);
   return {...helpers,...state,sourceSha256:crypto.createHash('sha256').update(source).digest('hex')};
 }
 
@@ -49,6 +50,8 @@ async function main() {
   const pluginDir=path.join(serverDir,'Plugins','YACA Voice');
   fs.mkdirSync(pluginDir,{recursive:true});
   for(const name of ['server.js','plugin.json'])fs.copyFileSync(path.join(root,'dist','plugin',name),path.join(pluginDir,name));
+  fs.cpSync(path.join(root,'dist','plugin','assets'),path.join(pluginDir,'assets'),{recursive:true});
+  fs.cpSync(path.join(root,'dist/plugin/Runtime'),path.join(pluginDir,'Runtime'),{recursive:true});
   const config=JSON.parse(fs.readFileSync(path.join(root,'config.json'),'utf8'));
   config.yaca.uniqueServerId='isolated-plugin-test-uid';
   fs.writeFileSync(path.join(pluginDir,'config.json'),JSON.stringify(config));
@@ -105,7 +108,7 @@ async function main() {
   const result={passed:true,nativeRuntime:native,fork,loaderSourceSha256:loader.sourceSha256,
     pluginSha256:crypto.createHash('sha256').update(fs.readFileSync(path.join(pluginDir,'server.js'))).digest('hex'),
     checks:['actual manifest/discovery helpers','new plugin stays disabled','activation via discovery state','actual requireTemp loader',
-      'renamed folder','no runtime dependencies or relative assets','duplicate entry is idempotent','gamemode reload restores voice',
+      'renamed folder and operator picture assets','no npm runtime dependencies or temporary-path asset assumptions','duplicate entry is idempotent','gamemode reload restores voice',
       'existing gamemode remains unchanged','stop cleans up'],statuses,
     serverSourceChanged:false,skyrimStarted:false,teamspeakPluginStarted:false};
   fs.writeFileSync(path.join(artifactDir,native?'plugin-native-validation.json':'plugin-loader-validation.json'),JSON.stringify(result,null,2));

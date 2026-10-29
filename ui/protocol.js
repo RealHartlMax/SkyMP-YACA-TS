@@ -20,7 +20,8 @@
       var data = JSON.parse(raw);
       if (!data || typeof data !== 'object' || typeof data.code !== 'string') return null;
       if (data.code === 'OK' && data.requestType === 'JOIN') {
-        if (typeof data.message !== 'string' || !/^[1-9]\d*$/.test(data.message)) return null;
+        if (typeof data.message !== 'number' && typeof data.message !== 'string') return null;
+        if (!/^[1-9]\d*$/.test(String(data.message))) return null;
         var id = Number(data.message);
         return id <= 65535 ? { kind: 'joined', clientId: id } : null;
       }
@@ -48,23 +49,7 @@
       }; }),
     } };
   }
-  function radio(state, roster, clientId) {
-    if (!state.radioEnabled || !clientId) return {};
-    var result = {};
-    [state.primaryChannel, state.secondaryChannel].forEach(function (channel) {
-      if (channel === null || result[channel]) return;
-      var members = roster.filter(function (p) {
-        return p.clientId && p.radioEnabled && (p.primaryChannel === channel || p.secondaryChannel === channel);
-      });
-      if (!members.some(function (p) { return p.transmitting === channel; })) return;
-      result[channel] = { base: { request_type: 'INGAME' }, comm_device: {
-        comm_type: 'RADIO', on: true, channel: channel,
-        members: members.map(function (p) { return { client_id: p.clientId, mode: p.transmitting === channel ? 0 : 1 }; }),
-      } };
-    });
-    return result;
-  }
-  var api = { init: init, response: response, spatial: spatial, radio: radio };
+  var api = { init: init, response: response, spatial: spatial };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.SkyMpYacaProtocol = api;
 })(typeof window !== 'undefined' ? window : globalThis);

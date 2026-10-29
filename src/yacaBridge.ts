@@ -1,8 +1,10 @@
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import { dirname, resolve } from "path";
 import { randomUUID } from "crypto";
 import { loadConfig, validateConfig } from "./configLoader";
 import { buildClientSources } from "./clientSources";
+import { connectionImage } from "./connectionImage";
+import { createVoiceUi, VoiceUiApi } from "./uiCoreAdapter";
 import { YacaBridgeConfig } from "./types/config";
 import { PLUGIN_STATES, PluginState, VoiceState, PeerState, SkyMpRuntime } from "./types/runtime";
 
@@ -21,6 +23,8 @@ export interface BridgeOptions {
   config?: YacaBridgeConfig;
   configPath?: string;
   overlaySource?: string;
+  assetRoot?: string;
+  uiProvider?: () => VoiceUiApi | undefined;
   onVoiceActivity?: (state: VoiceActivity) => void;
 }
 
@@ -34,8 +38,6 @@ interface Session {
 const installed = new WeakMap<object, { dispose(): void }>();
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
-const isChannel = (value: unknown, count: number): value is number =>
-  Number.isInteger(value) && Number(value) >= 0 && Number(value) < count;
 const connected = (state: VoiceState): boolean =>
   state.clientId !== null && state.pluginState === "IN_INGAME_CHANNEL";
 
@@ -54,6 +56,7 @@ export function initYacaBridge(options: BridgeOptions = {}) {
   const config = options.config ? validateConfig(options.config) : loadConfig(options.configPath);
   const overlay = options.overlaySource ?? readFileSync(resolve(__dirname, "ui/overlay.js"), "utf8");
   const sources = buildClientSources(overlay, config);
+  const imageUrl = connectionImage(config, options.assetRoot ?? (options.configPath ? dirname(options.configPath) : resolve(__dirname, "..")));
   const bridgeId = randomUUID();
   const sessions = new Map<number, Session>();
   // The fork's current lip-sync path still has unit and form-ID mapping issues.
@@ -62,6 +65,7 @@ export function initYacaBridge(options: BridgeOptions = {}) {
   let disposed = false;
   let revision = 0;
   installed.get(runtime)?.dispose();
+  const voiceUi = createVoiceUi(config, options.uiProvider);
 
   const voiceRange = (state: VoiceState) => config.voiceRanges.ranges[state.rangeIndex];
   const notifyActivity = (state: VoiceState) => activity({
@@ -74,22 +78,17 @@ export function initYacaBridge(options: BridgeOptions = {}) {
     actorId: state.actorId,
     clientId: connected(state) ? state.clientId : null,
     voiceRange: voiceRange(state),
-    radioEnabled: connected(state) && state.radioEnabled,
-    primaryChannel: state.primaryChannel,
-    secondaryChannel: state.secondaryChannel,
-    transmitting: connected(state) && !state.microphoneMuted && !state.microphoneDisabled
-      ? state.transmitting : null,
   });
   const clientConfig = {
     teamspeak: { serverUrl: config.teamspeak.serverUrl, serverPort: config.teamspeak.serverPort },
-    yaca: config.yaca, voiceRanges: config.voiceRanges, radio: config.radio,
-    client: config.client, ui: config.ui, keyBinds: config.keyBinds,
+    yaca: config.yaca, voiceRanges: config.voiceRanges,
+    client: config.client, ui: { ...config.ui, connectionOverlay: { ...config.ui.connectionOverlay, imageUrl } }, keyBinds: config.keyBinds,
   };
   const publish = (all = false, actorId?: number) => {
-    const roster = [...sessions.values()].map(s => peer(s.state)).filter(p => p.clientId !== null);
     for (const [id, session] of sessions) {
       if (!all && id !== actorId) continue;
-      runtime.set(id, OWNER_PROPERTY, { bridgeId, revision: ++revision, config: clientConfig, state: session.state, roster });
+      runtime.set(id, OWNER_PROPERTY, { bridgeId, revision: ++revision, config: clientConfig, state: session.state });
+      voiceUi.update(session.state);
     }
   };
   const prune = (now: number) => {
@@ -97,6 +96,7 @@ export function initYacaBridge(options: BridgeOptions = {}) {
     for (const [id, session] of sessions) {
       if (now - session.seenAt <= 12000) continue;
       sessions.delete(id);
+      voiceUi.remove(id);
       notifyActivity({ ...session.state, talking: false });
       try { runtime.set(id, PEER_PROPERTY, null); } catch { /* Actor may already be gone. */ }
       removed = true;
@@ -115,8 +115,6 @@ export function initYacaBridge(options: BridgeOptions = {}) {
           actorId, pluginState: "NOT_CONNECTED", clientId: null, talking: false,
           microphoneMuted: false, microphoneDisabled: false, soundMuted: false, soundDisabled: false,
           rangeIndex: config.voiceRanges.defaultIndex, rangeChangeAllowed: true,
-          radioEnabled: false, primaryChannel: config.radio.defaultChannel,
-          secondaryChannel: config.radio.secondaryChannel, transmitting: null,
         },
         seenAt: now, bucketStart: now, events: 0,
       };
@@ -144,28 +142,18 @@ export function initYacaBridge(options: BridgeOptions = {}) {
       state.clientId = state.pluginState === "NOT_CONNECTED" ? null : clientId as number | null;
       state.talking = connected(state) && payload.talking === true;
       for (const key of ["microphoneMuted", "microphoneDisabled", "soundMuted", "soundDisabled"] as const) state[key] = payload[key] as boolean;
-      if (!connected(state)) state.transmitting = null;
     } else if (payload.type === "action") {
       if (payload.action === "range" && state.rangeChangeAllowed && Number.isInteger(payload.value) &&
           Number(payload.value) >= 0 && Number(payload.value) < config.voiceRanges.ranges.length) {
         state.rangeIndex = payload.value as number;
-      } else if (payload.action === "radioEnabled" && typeof payload.value === "boolean") {
-        state.radioEnabled = payload.value;
-        if (!state.radioEnabled) state.transmitting = null;
-      } else if (payload.action === "primaryChannel" && isChannel(payload.value, config.radio.maxChannels)) {
-        state.primaryChannel = payload.value;
-        state.transmitting = null;
-      } else if (payload.action === "secondaryChannel" && (payload.value === null || isChannel(payload.value, config.radio.maxChannels))) {
-        state.secondaryChannel = payload.value;
-        state.transmitting = null;
-      } else if (payload.action === "transmit" && (payload.value === null ||
-          (state.radioEnabled && connected(state) && (payload.value === state.primaryChannel || payload.value === state.secondaryChannel)))) {
-        state.transmitting = payload.value as number | null;
+      } else if (payload.action === "cycleRange" && state.rangeChangeAllowed && (payload.value === 1 || payload.value === -1)) {
+        const count = config.voiceRanges.ranges.length;
+        state.rangeIndex = (state.rangeIndex + payload.value + count) % count;
       } else return;
     } else return;
     const after = JSON.stringify(peer(state));
     if (after !== before) runtime.set(actorId, PEER_PROPERTY, peer(state));
-    publish(removed || after !== before, actorId);
+    publish(removed, actorId);
     notifyActivity(state);
   };
 
@@ -194,13 +182,14 @@ export function initYacaBridge(options: BridgeOptions = {}) {
       for (const [id, session] of sessions) {
         try {
           runtime.set(id, OWNER_PROPERTY, { bridgeId, revision: ++revision, disabled: true,
-            config: clientConfig, state: session.state, roster: [] });
+            config: clientConfig, state: session.state });
           runtime.set(id, PEER_PROPERTY, null);
         } catch { /* The host may have destroyed the actor already. */ }
       }
       if (runtime[CLIENT_EVENT] === handler) runtime[CLIENT_EVENT] = previousHandler;
       for (const session of sessions.values()) notifyActivity({ ...session.state, talking: false });
       sessions.clear();
+      voiceUi.dispose();
       // The host owns other properties/events. Never call mp.clear() here.
     },
   };

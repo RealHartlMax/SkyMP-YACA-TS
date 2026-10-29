@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" fill="none">
+  <defs>
+    <radialGradient id="halo"><stop stop-color="#92c9df" stop-opacity=".3"/><stop offset="1" stop-color="#7ab5d2" stop-opacity="0"/></radialGradient>
+    <linearGradient id="stone" x1="140" y1="64" x2="228" y2="278" gradientUnits="userSpaceOnUse"><stop stop-color="#d3e9eb"/><stop offset=".45" stop-color="#7caec4"/><stop offset="1" stop-color="#344e73"/></linearGradient>
+    <linearGradient id="edge" x1="152" y1="60" x2="208" y2="282" gradientUnits="userSpaceOnUse"><stop stop-color="#eee3b6"/><stop offset="1" stop-color="#9e8455"/></linearGradient>
+  </defs>
+  <circle cx="180" cy="172" r="155" fill="url(#halo)"/>
+  <circle cx="180" cy="174" r="123" stroke="#c9b17c" stroke-opacity=".24"/>
+  <path d="M180 34v18m0 244v18M40 174h18m244 0h18M80 74l13 13m174 174 13 13M80 274l13-13M267 87l13-13" stroke="#c9b17c" stroke-opacity=".6"/>
+  <path d="m180 66 50 64 9 83-59 70-59-70 9-83z" fill="url(#stone)" stroke="url(#edge)" stroke-width="2"/>
+  <path d="m180 66-21 91 21 126 24-126z" fill="#e0f7fb" fill-opacity=".4"/>
+  <path d="m130 130 29 27-38 56m109-83-26 27 35 56m-80-56h45m-24-91v217" stroke="#c9e6eb" stroke-opacity=".5"/>
+  <path d="m180 133-13 25 13 43 15-43z" fill="#f0fbf5" fill-opacity=".8"/>
+  <path d="M119 227c-35 17-13 40 61 40s96-23 61-40" stroke="#c9b17c" stroke-opacity=".65" stroke-width="1.5"/>
+  <path d="m83 139 3 7 7 3-7 3-3 7-3-7-7-3 7-3zm191 66 3 6 6 3-6 3-3 6-3-6-6-3 6-3z" fill="#d2bd8b"/>
+</svg>

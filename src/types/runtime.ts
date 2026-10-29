@@ -14,19 +14,11 @@ export interface VoiceState {
   soundDisabled: boolean;
   rangeIndex: number;
   rangeChangeAllowed: boolean;
-  radioEnabled: boolean;
-  primaryChannel: number;
-  secondaryChannel: number | null;
-  transmitting: number | null;
 }
 export interface PeerState {
   actorId: number;
   clientId: number | null;
   voiceRange: number;
-  radioEnabled: boolean;
-  primaryChannel: number;
-  secondaryChannel: number | null;
-  transmitting: number | null;
 }
 export interface SkyMpRuntime {
   makeProperty(name: string, options: {

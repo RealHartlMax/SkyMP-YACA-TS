@@ -19,16 +19,10 @@
     "ranges": [1.0, 3.0, 8.0, 15.0, 20.0, 25.0, 30.0, 40.0],
     "defaultIndex": 1
   },
-  "radio": {
-    "defaultChannel": 0,
-    "maxChannels": 9,
-    "secondaryChannel": 1
-  },
   "keyBinds": {
+    "cycleVoiceRange": "V",
     "increaseVoiceRange": "ADD",
-    "decreaseVoiceRange": "SUBTRACT",
-    "primaryRadioTransmit": "N",
-    "secondaryRadioTransmit": "CAPITAL"
+    "decreaseVoiceRange": "SUBTRACT"
   },
   "client": {
     "webSocketUrl": "ws://127.0.0.1:30125/",
@@ -37,6 +31,13 @@
   },
   "ui": {
     "title": "SkyMP Voice",
-    "toggleKey": "F8"
+    "toggleKey": "F8",
+    "connectionOverlay": {
+      "imagePath": "assets/voice-required.svg",
+      "imageUrl": "",
+      "imageAlt": "Schwebender Seelenkristall",
+      "message": "Verbinde dich mit dem TeamSpeak dieser Spielwelt, um die Stimmen der anderen zu hören.",
+      "backgroundOpacity": 0.68
+    }
   }
 }

@@ -1,7 +1,9 @@
 # YACA Voice als SkyMP-Plugin installieren
 
 Für den geprüften SkyMP-Fork ist keine Änderung an Servercode oder `gamemode.js`
-erforderlich. Die UI und der lokale YACA-Transport sind im Serverskript enthalten.
+erforderlich. Der Verbindungshinweis und der lokale YACA-Transport sind im
+Serverskript enthalten. Die dauerhafte Reichweitenanzeige verwendet die
+öffentliche API v1 von **SkyMP UI Core** (`skymp-ui-core`).
 
 ## Installation
 
@@ -15,6 +17,8 @@ erforderlich. Die UI und der lokale YACA-Transport sind im Serverskript enthalte
          plugin.json
          server.js
          config.json
+         assets/
+           voice-required.svg
    ```
 
    `Plugins` muss genau so geschrieben sein. Das Arbeitsverzeichnis ist das
@@ -53,9 +57,65 @@ erforderlich. Die UI und der lokale YACA-Transport sind im Serverskript enthalte
    Der aktuelle Fork fängt Fehler aus temporären Plugin-Modulen ab; deshalb
    zusätzlich zum Dashboard-Status immer diesen Logeintrag prüfen.
 
-5. Auf dem Spieler-PC TeamSpeak und das YACA-Plugin starten, dem Server beitreten
-   und in Skyrim **F8** drücken. Numpad **+ / −** ändern die Sprachreichweite;
-   **N** sendet auf dem Hauptkanal, **Caps Lock** auf dem Zweitkanal.
+5. Für die dauerhafte Reichweitenanzeige **UI Core** aktivieren und dessen
+   Client-/CEF-Integration installieren. Die verifizierte Quelle ist
+   `D:/GitHub/SkyMP-UI-Core`, insbesondere `docs/CLIENT_DEPLOYMENT.md`. YACA
+   registriert `skymp-yaca-ts:voice-range` als Status-Widget unten rechts. Der
+   aktualisierte UI-Core-Renderer zeigt es im selben Runensiegel-/Ringstil wie
+   Metabolism. YACA liefert Reichweite, Mute-/Unmute- und Sprechstatus; auch bei
+   gesperrter Reichweite bleibt der Mikrofonstatus sichtbar. Dafür später das
+   YACA-Serverplugin und das UI-Core-Runtime-Paket gemeinsam aktualisieren.
+   Position und Skalierung kann der Spieler mit `/UiEdit` ändern.
+   Auch wenn UI Core später startet, versucht YACA die Registrierung bei den
+   folgenden Zustandsmeldungen erneut. Ohne UI Core fehlen nur diese Anzeige
+   und ihre Darstellungseinstellungen; das Serverlog weist darauf hin.
+
+6. Auf dem Spieler-PC TeamSpeak und das YACA-Plugin starten und dem richtigen
+   Server beitreten. **V** schaltet die Sprachreichweite direkt durch, ohne F8.
+   Numpad **+ / −** schalten vor/zurück. **F8** öffnet die optionalen
+   Spracheinstellungen; Escape schließt sie. In Skyrim-Menüs und während
+   Chat-/anderer Browsereingaben werden die Gameplay-Tasten ausgesetzt. Im
+   geöffneten F8-Panel funktioniert der Wechsel ebenfalls. Die Taste lässt sich
+   über `keyBinds.cycleVoiceRange` ändern. Funkkanäle und Funktasten entfallen.
+
+## Vollbildhinweis und eigenes Bild
+
+Der halbtransparente Hinweis erscheint automatisch bei fehlender lokaler
+YACA-Verbindung, falschem TeamSpeak-Server, fehlendem Ingame-Kanal oder einem
+Plugin-/Kanalfehler. Er verschwindet erst, wenn **Ingame-Kanal und Client-ID**
+bestätigt sind. Ein stummes Mikrofon blendet ihn nicht ein.
+Eine erfolgreiche `OK`/`JOIN`-Antwort bestätigt bereits den Beitritt und die
+Client-ID. Eine zusätzliche initiale `MOVED_CHANNEL`-Meldung ist dafür nicht
+erforderlich. Spätere Kanalwechsel, falscher Server und Verbindungsabbruch
+werden weiterhin ausgewertet.
+Der Hinweis nimmt keinen Maus-/Tastaturfokus und öffnet kein Menü. Bei ausbleibenden Spielframes
+wird die Anzeige nach etwa 3–4 Sekunden entfernt.
+
+Das mitgelieferte schwebende Kristallbild lässt sich ohne Neubau ändern:
+
+1. `assets/voice-required.svg` durch ein eigenes SVG ersetzen; alternativ z. B.
+   `assets/meine-welt.webp` in den Plugin-Ordner legen.
+2. In `config.json` bei Bedarf anpassen:
+
+   ```json
+   "connectionOverlay": {
+     "imagePath": "assets/meine-welt.webp",
+     "imageUrl": "",
+     "imageAlt": "Wappen unserer Spielwelt",
+     "message": "Tritt unserem TeamSpeak bei, um die anderen zu hören.",
+     "backgroundOpacity": 0.68
+   }
+   ```
+
+   Dieses Objekt liegt unter **`ui`**. Zulässig sind SVG/PNG/JPEG/WebP, lokal bis
+   64 KiB. Größere Bilder können über eine vollständige **HTTPS-URL** in
+   `imageUrl` eingebunden werden; diese hat Vorrang vor `imagePath`. Lokale
+   Dateien werden vom Server mitgeliefert und brauchen keine separate
+   Launcher-Verteilung. Transparente Bilder wirken besonders gut. Die
+   Hintergrunddeckkraft ist von `0.1` bis `0.9` einstellbar. Bei aktivierter
+   Einstellung für reduzierte Bewegung bleibt das Bild ruhig.
+3. Den **Gameserver neu starten**. Bild und Konfiguration werden beim Start
+   eingelesen. Für diese Änderung muss der Launcher nicht neu gebaut werden.
 
 Serverbetreiber brauchen für diese Installation kein `npm install`, keinen
 Compiler und keine zusätzliche ESP-/PEX-/DLL-Datei. Spieler benötigen den zum
@@ -64,13 +124,17 @@ Launcher oder die native Clientinstallation wird durch dieses Paket nicht verän
 
 ## Betrieb und Updates
 
-Die Laufzeit besteht aus `server.js`, `plugin.json` und `config.json`. Quellen,
+Die Laufzeit besteht aus `server.js`, `plugin.json`, `config.json` und `assets/`. Quellen,
 Lizenz, Anleitung und lokale Prüfbefunde im Paket dienen Entwicklung und Nachweis.
 Der Plugin-Ordner kann umbenannt werden, solange er direkt unter `Plugins/`
 liegt und der Manifestname `skymp-yaca-ts` eindeutig bleibt.
 
 Bei einem Update die eigene **`config.json` behalten**, `server.js` und
-`plugin.json` ersetzen und den Gameserver neu starten. Änderungen an der Config
+`plugin.json` ersetzen, fehlende Standardassets ergänzen und den Gameserver neu
+starten. Eigene Bilder behalten. Alte `radio`- und Funktasten-Einträge in der
+Config werden ignoriert; `cycleVoiceRange` erhält bei alten Configs den Standard
+`V`. Falls eine vorhandene andere Taste bereits V nutzt, eine andere freie
+Taste konfigurieren. Änderungen an der Config
 werden beim nächsten Serverstart bzw. bei einer Gamemode-Neuladung eingelesen.
 Gamemode-Neuladungen registriert das Plugin selbst erneut; Serverquellen müssen
 dafür nicht bearbeitet werden. Eine zweite manuelle `initYacaBridge()`-Einbindung

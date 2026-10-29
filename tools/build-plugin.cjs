@@ -6,9 +6,11 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'plugin.json'), 'utf8'));
 manifest.version = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version;
-const modules = ['yacaBridge', 'configLoader', 'clientSources', 'types/runtime', 'plugin'];
+const modules = ['yacaBridge', 'configLoader', 'clientSources', 'connectionImage', 'uiCoreAdapter', 'types/runtime', 'plugin'];
 const definitions = modules.map(id => `${JSON.stringify(id)}: function (module, exports, require, __dirname) {\n${fs.readFileSync(path.join(root, 'dist', id + '.js'), 'utf8')}\n}`).join(',\n');
-const overlay = fs.readFileSync(path.join(root, 'dist', 'ui', 'overlay.js'), 'utf8');
+// Modern distribution downloads signed UI; never place it inside a bounded EventSource body.
+const overlay = process.env.SKYMP_YACA_LEGACY_OVERLAY === '1' ? fs.readFileSync(path.join(root, 'dist', 'ui', 'overlay.js'), 'utf8') : '';
+
 const entry = `// SkyMP YACA server plugin ${manifest.version}. GPL-3.0; corresponding source is included in sources/.\n
 'use strict';
 (function (nativeRequire) {
@@ -40,6 +42,7 @@ const entry = `// SkyMP YACA server plugin ${manifest.version}. GPL-3.0; corresp
     module.exports = load('plugin').startYacaPlugin({
       runtime: globalThis.mp,
       configPath: path.join(pluginRoot, 'config.json'),
+      assetRoot: pluginRoot,
       overlaySource: ${JSON.stringify(overlay)}
     });
   } catch (error) {
@@ -52,6 +55,8 @@ const destination = path.join(root, 'dist', 'plugin');
 fs.mkdirSync(destination, { recursive: true });
 fs.writeFileSync(path.join(destination, 'server.js'), entry);
 fs.writeFileSync(path.join(destination, 'plugin.json'), JSON.stringify(manifest, null, 2) + '\n');
+fs.cpSync(path.join(root, 'Runtime'), path.join(destination, 'Runtime'), { recursive: true });
 fs.copyFileSync(path.join(root, 'config.json'), path.join(destination, 'config.json'));
+fs.cpSync(path.join(root, 'assets'), path.join(destination, 'assets'), { recursive: true });
 fs.copyFileSync(path.join(root, 'tools', 'plugin-state.cjs'), path.join(destination, 'set-enabled.cjs'));
 console.log(`Built drop-in plugin: dist/plugin/ (${Buffer.byteLength(entry)} bytes, no npm runtime dependencies)`);

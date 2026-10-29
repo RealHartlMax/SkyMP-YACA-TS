@@ -48,21 +48,28 @@ test('plugin mute/disconnect suppress speaking and never accepts another player 
   assert.equal(f.activity.at(-1).isSpeaking, false);
 });
 
-test('radio roster works beyond spatial neighbors, validates PTT and releases on channel/connection changes', () => {
+test('range cycles use current server state, wrap, respect locks and reject removed radio commands', () => {
   const f = fixture();
   f.join(101, 11); f.join(102, 12);
-  f.event(101, { type: 'action', action: 'transmit', value: 0 });
-  assert.equal(f.owner(101).state.transmitting, null);
-  f.event(101, { type: 'action', action: 'radioEnabled', value: true });
-  f.event(101, { type: 'action', action: 'transmit', value: 8 });
-  assert.equal(f.owner(101).state.transmitting, null);
-  f.event(101, { type: 'action', action: 'transmit', value: 0 });
-  assert.equal(f.owner(102).roster.find(p => p.actorId === 101).transmitting, 0);
-  f.event(101, { type: 'action', action: 'primaryChannel', value: 3 });
-  assert.equal(f.owner(101).state.transmitting, null);
-  f.event(101, { type: 'action', action: 'transmit', value: 3 });
-  f.event(101, { type: 'action', action: 'radioEnabled', value: false });
-  assert.equal(f.owner(102).roster.find(p => p.actorId === 101).transmitting, null);
+  f.event(101, { type: 'action', action: 'cycleRange', value: 1 });
+  f.event(101, { type: 'action', action: 'cycleRange', value: 1 });
+  assert.equal(f.owner(101).state.rangeIndex,3);
+  f.event(101, { type: 'action', action: 'range', value: 0 });
+  f.event(101, { type: 'action', action: 'cycleRange', value: -1 });
+  assert.equal(f.owner(101).state.rangeIndex,7);
+  f.event(101, { type: 'action', action: 'cycleRange', value: 1 });
+  assert.equal(f.owner(101).state.rangeIndex,0);
+  f.controller.setVoiceRangeChangeAllowed(101,false);
+  f.event(101, { type: 'action', action: 'cycleRange', value: 1 });
+  assert.equal(f.owner(101).state.rangeIndex,0);
+  assert.equal(f.owner(102).state.rangeIndex,1);
+  const previous = structuredClone(f.owner(101));
+  for (const action of ['radioEnabled','primaryChannel','secondaryChannel','transmit'])
+    f.event(101,{type:'action',action,value:1});
+  assert.deepEqual(f.owner(101),previous);
+  assert.equal('radio' in f.owner(101).config,false);
+  assert.equal('radioEnabled' in f.owner(101).state,false);
+  assert.equal('roster' in f.owner(101),false);
 });
 
 test('expires stale players and clears VAD while keeping other gamemode handlers intact', t => {
@@ -72,7 +79,6 @@ test('expires stale players and clears VAD while keeping other gamemode handlers
   f.join(101, 11); f.join(102, 12);
   time += 13000;
   f.event(102, { type: 'ready' });
-  assert.equal(f.owner(102).roster.length, 0);
   assert.equal(f.runtime.get(101, 'yacaPeer'), null);
   const other = () => {};
   f.runtime._unrelated = other;

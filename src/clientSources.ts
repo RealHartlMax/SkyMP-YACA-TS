@@ -17,17 +17,16 @@ if (s && ctx.refr && ctx.value && ctx.value.clientId) {
 }
 `;
   const keys = {
+    cycle: KEY_CODES[config.keyBinds.cycleVoiceRange],
     increase: KEY_CODES[config.keyBinds.increaseVoiceRange],
     decrease: KEY_CODES[config.keyBinds.decreaseVoiceRange],
-    primary: KEY_CODES[config.keyBinds.primaryRadioTransmit],
-    secondary: KEY_CODES[config.keyBinds.secondaryRadioTransmit],
     toggle: KEY_CODES[config.ui.toggleKey],
   };
   const events = `
 var sp = ctx.sp;
 var old = sp.storage.skympYaca;
 if (old && old.browserHandler !== undefined && sp.unsubscribe) sp.unsubscribe(old.browserHandler);
-var s = { neighbors: {}, owner: null, ownerSeenAt: 0, disabled: false, keys: {}, lastFrame: 0, lastBoot: 0, heartbeat: 0, lastReady: 0, transmitting: null, focusBefore: false };
+var s = { neighbors: {}, owner: null, ownerSeenAt: 0, disabled: false, keys: {}, lastFrame: 0, lastBoot: 0, booted: false, heartbeat: 0, lastReady: 0, focusBefore: false };
 sp.storage.skympYaca = s;
 var codes = ${JSON.stringify(keys)};
 var bootstrap = ${JSON.stringify(overlay)};
@@ -68,9 +67,11 @@ var tick = function () {
     if (!s.disabled) { s.disabled = true; execute('window.SkyMpYaca && window.SkyMpYaca.stop()'); }
     return;
   }
-  if (now - s.heartbeat > 3000 && now - s.lastBoot > 2000) {
+  if (!s.booted || (now - s.heartbeat > 3000 && now - s.lastBoot > 2000)) {
+    s.booted = true;
     s.lastBoot = now;
-    execute(bootstrap);
+    var moduleSettings = sp.settings && sp.settings['skymp5-client'];
+    if (!moduleSettings || moduleSettings['plugin-runtime-api'] !== 1 || moduleSettings['plugin-runtime-managed'] === false) execute(bootstrap);
   }
   if (now - s.lastReady > 5000) {
     s.lastReady = now;
@@ -82,17 +83,11 @@ var tick = function () {
   var focused = sp.browser.isFocused();
   var pressed = {};
   Object.keys(codes).forEach(function (key) { pressed[key] = sp.Input.isKeyPressed(codes[key]); });
-  if (!menu && pressed.toggle && !s.keys.toggle) execute('window.SkyMpYaca && window.SkyMpYaca.toggle()');
-  if (!menu && !focused) {
-    var count = owner.config.voiceRanges.ranges.length;
-    if (pressed.increase && !s.keys.increase) action('range', (owner.state.rangeIndex + 1) % count);
-    if (pressed.decrease && !s.keys.decrease) action('range', (owner.state.rangeIndex + count - 1) % count);
+  if (!menu && !focused && pressed.toggle && !s.keys.toggle) execute('window.SkyMpYaca && window.SkyMpYaca.toggle()');
+  if (!menu && !focused && owner.state.rangeChangeAllowed) {
+    if ((pressed.cycle && !s.keys.cycle) || (pressed.increase && !s.keys.increase)) action('cycleRange', 1);
+    else if (pressed.decrease && !s.keys.decrease) action('cycleRange', -1);
   }
-  var transmitting = !menu && !focused && owner.state.radioEnabled &&
-    owner.state.pluginState === 'IN_INGAME_CHANNEL' && owner.state.clientId &&
-    !owner.state.microphoneMuted && !owner.state.microphoneDisabled ?
-    (pressed.primary ? owner.state.primaryChannel : pressed.secondary ? owner.state.secondaryChannel : null) : null;
-  if (s.transmitting !== transmitting) { s.transmitting = transmitting; action('transmit', transmitting); }
   s.keys = pressed;
   if (now - s.lastFrame < owner.config.client.updateIntervalMs) return;
   s.lastFrame = now;

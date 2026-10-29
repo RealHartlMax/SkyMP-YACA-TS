@@ -26,14 +26,26 @@ TeamSpeak mit YACA-Plugin und passende TeamSpeak-Kanal-IDs.
 3. Plugin erkennen lassen, im vorhandenen Plugin-/Admin-Workflow aktivieren
    und den Gameserver neu starten. Die vollständige Anleitung steht in
    [PLUGIN-INSTALL.md](PLUGIN-INSTALL.md). Eine Änderung an `gamemode.js` entfällt.
-4. Mit dem Client verbinden,
-   TeamSpeak/YACA öffnen und im Spiel **F8** drücken. Die Bridge blendet sich
-   über dem vorhandenen Frontend ein und lädt keine neue Browser-URL.
+4. UI Core mit seiner Client-/CEF-Integration installieren. Mit dem Client
+   verbinden und TeamSpeak/YACA öffnen. Die Reichweite erscheint über UI Core.
+   Die optionale F8-Oberfläche und der Verbindungshinweis liegen im vorhandenen
+   Browser; es wird keine neue Browser-URL geladen.
 5. Mit zwei Spielern dieselbe Spielwelt betreten. Nähe/Ferne sowie Innenraum-
-   und Außenzellengrenzen prüfen; anschließend beide Funkgeräte einschalten,
-   denselben Hauptkanal wählen und **N** zum Senden halten. Für den Zweitkanal
-   **Feststelltaste/Caps Lock** halten. Beim Öffnen von Menüs oder der UI wird
-   eine laufende Übertragung freigegeben.
+   und Außenzellengrenzen prüfen. **V** mehrfach antippen, ohne F8 zu öffnen:
+   Reichweite und UI-Core-Anzeige müssen mitwechseln. Gedrückthalten schaltet nur
+   einmal. Zusätzlich Numpad +/− und die serverseitige Reichweitensperre prüfen.
+   TeamSpeak-Mikrofon stumm- und wieder einschalten: Das Runensiegel muss
+   „Mikrofon stumm“ bzw. „Mikrofon aktiv“ zeigen, auch bei gesperrter Reichweite.
+   Bei aktivem Sprechen erscheint „Du sprichst“. Mikrofon-/Ton-Mute oder
+   deaktivierte Audiogeräte dürfen keinen Sprechstatus anzeigen. Mit `/UiEdit`
+   Reichweite und Metabolism-Anzeigen verschieben und skalieren; das gespeicherte
+   Layout muss erhalten bleiben. Die Darstellung liegt im UI-Core-Repository,
+   die Statusdaten im YACA-Adapter `src/uiCoreAdapter.ts`.
+6. TeamSpeak trennen und einen falschen Server betreten: Der Vollbildhinweis
+   muss automatisch erscheinen. Wieder korrekt verbinden: Er verschwindet.
+   Ein reines Mikrofon-Mute darf ihn nicht auslösen. Bilddatei austauschen,
+   Gameserver neu starten und das neue Bild prüfen. Skyrim-Menüs, Chat und
+   Serverwechsel dürfen keinen festhängenden Eingabefokus hinterlassen.
 
 Es werden keine PEX-Dateien installiert und keine Quest benötigt. Vorhandene
 Server-Einstellungen, Spielstände und Gamemode-Logik bleiben in der lokalen
@@ -45,10 +57,13 @@ Serverkopie erhalten. Das Plugin registriert sich nach einem serverseitigen
 | Einstellung | Bedeutung |
 | --- | --- |
 | `ui.toggleKey` | Standard `F8`: UI öffnen/schließen. Escape schließt ebenfalls. |
+| `keyBinds.cycleVoiceRange` | Standard `V`: Reichweite direkt durchschalten. |
 | `keyBinds.increaseVoiceRange` / `decreaseVoiceRange` | Standard `ADD` / `SUBTRACT`: Numpad +/−; als Flanke ausgewertet. |
-| `primaryRadioTransmit` / `secondaryRadioTransmit` | Standard `N` / `CAPITAL`: zum Senden halten. |
 | `voiceRanges.ranges` | 1–8 aufsteigende Reichweiten in Metern, höchstens 100 m. |
-| `radio.defaultChannel` / `secondaryChannel` | Indizes ab 0; die UI zeigt Index 0 als Kanal 01. Zweitkanal `null` deaktiviert ihn. |
+| `ui.connectionOverlay.imagePath` | Austauschbares lokales Bild aus `assets/`, bis 64 KiB. |
+| `ui.connectionOverlay.imageUrl` | Optionale HTTPS-Bildadresse, hat Vorrang. |
+| `ui.connectionOverlay.message` / `imageAlt` | Betreibertext und Bildbeschreibung. |
+| `ui.connectionOverlay.backgroundOpacity` | Deckkraft des Vollbildhintergrunds, 0.1–0.9. |
 | `client.webSocketUrl` | Standard `ws://127.0.0.1:30125/`, ausschließlich Loopback-Adressen. Verbindung läuft auf jedem Spieler-PC. |
 | `client.unitsPerMeter` | Umrechnung der Skyrim-Koordinaten; Startwert 70, im Spiel kalibrieren. |
 | `client.updateIntervalMs` | Positionspakete, Standard 250 ms. |
@@ -69,6 +84,8 @@ Plugin-Installation nicht erforderlich.
 ```powershell
 npm test
 node tools/verify-fork-plugin.cjs D:/GitHub/skymp
+node tools/verify-ui-core.cjs D:/GitHub/SkyMP-UI-Core
+node tools/verify-native-ui-core.cjs D:/GitHub/SkyMP-UI-Core
 ./tools/package-local.ps1
 ```
 

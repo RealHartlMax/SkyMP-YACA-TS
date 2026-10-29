@@ -10,6 +10,8 @@ try {
     foreach ($required in @('dist/yacaBridge.js', 'dist/yacaBridge.d.ts', 'dist/ui/overlay.js', 'dist/plugin/server.js', 'dist/plugin/plugin.json')) {
         if (-not (Test-Path -LiteralPath (Join-Path $taskRoot $required))) { throw "Build artifact missing: $required" }
     }
+    & node -e "require('./tools/plugin-runtime/package.cjs').verifyRuntimePackage('dist/plugin/Runtime', require('./dist/plugin/plugin.json'))"
+    if ($LASTEXITCODE -ne 0) { throw 'Sign the plugin Runtime before release packaging.' }
     try { $zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('Europe/Berlin') }
     catch { $zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('W. Europe Standard Time') }
     $stamp = [System.TimeZoneInfo]::ConvertTime([System.DateTimeOffset]::UtcNow, $zone).ToString('yyyy-MM-dd-HHmmss')
@@ -17,13 +19,13 @@ try {
     $packageDir = Join-Path $artifactRoot 'skymp-yaca-ts'
     if (Test-Path -LiteralPath $artifactRoot) { throw "Output already exists: $artifactRoot" }
     New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
-    $sourceItems = @('src','ui','tools','docs','tests','config.json','plugin.json','package.json','package-lock.json','tsconfig.json','README.md','LICENSE')
+    $sourceItems = @('src','client','ui','assets','tools','docs','tests','config.json','plugin.json','package.json','package-lock.json','tsconfig.json','README.md','LICENSE')
     foreach ($item in @('dist') + $sourceItems) {
         Copy-Item -LiteralPath (Join-Path $taskRoot $item) -Destination $packageDir -Recurse
     }
     $validationDir = Join-Path $packageDir 'validation'
     New-Item -ItemType Directory -Path $validationDir | Out-Null
-    foreach ($item in @('browser-validation.json','native-validation.json','plugin-loader-validation.json','plugin-native-validation.json','unit-validation.txt','ui-desktop.png','ui-mobile.png','ui-mock-plugin.png')) {
+    foreach ($item in @('browser-validation.json','ui-core-validation.json','ui-core-native-validation.json','plugin-loader-validation.json','plugin-native-validation.json','unit-validation.txt','ui-desktop.png','ui-mobile.png','ui-mock-plugin.png','ui-core-range.png')) {
         $source = Join-Path $taskRoot "artifacts/$item"
         if (Test-Path -LiteralPath $source) { Copy-Item -LiteralPath $source -Destination $validationDir }
     }
@@ -34,8 +36,8 @@ try {
     $pluginsDir = Join-Path $installRoot 'Plugins'
     $pluginDir = Join-Path $pluginsDir 'skymp-yaca-ts'
     New-Item -ItemType Directory -Path $pluginDir -Force | Out-Null
-    foreach ($item in @('server.js','plugin.json','config.json','set-enabled.cjs')) {
-        Copy-Item -LiteralPath (Join-Path $taskRoot "dist/plugin/$item") -Destination $pluginDir
+    foreach ($item in @('server.js','plugin.json','config.json','set-enabled.cjs','assets','Runtime')) {
+        Copy-Item -LiteralPath (Join-Path $taskRoot "dist/plugin/$item") -Destination $pluginDir -Recurse
     }
     Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/PLUGIN-INSTALL.md') -Destination (Join-Path $pluginDir 'README.md')
     Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination $pluginDir

@@ -58,7 +58,7 @@ test('stopping the plugin cancels a pending restore', async () => {
   assert.equal(runtime._yacaClient,undefined);
 });
 
-test('single-file entry loads from a temporary module using only plugin.json and config.json', t => {
+test('bundled entry loads from a temporary module with operator-replaceable picture assets', t => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(),'yaca-bundle-test-'));
   t.after(()=>{
     assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep));
@@ -70,6 +70,7 @@ test('single-file entry loads from a temporary module using only plugin.json and
   fs.writeFileSync(path.join(pluginDir,'plugin.json'),JSON.stringify(manifest));
   const config={...structuredClone(sample),yaca:{...sample.yaca,uniqueServerId:'bundle-test-uid'}};
   fs.writeFileSync(path.join(pluginDir,'config.json'),JSON.stringify(config));
+  fs.cpSync(path.resolve(__dirname,'../assets'),path.join(pluginDir,'assets'),{recursive:true});
   const tempEntry=path.join(dir,'temporary-module.js');
   fs.copyFileSync(path.resolve(__dirname,'../dist/plugin/server.js'),tempEntry);
   const script=`
@@ -80,6 +81,7 @@ test('single-file entry loads from a temporary module using only plugin.json and
     const plugin=require('./temporary-module.js');
     mp._yacaClient(101,{type:'ready'});
     assert.equal(mp.get(101,'yacaOwner').config.yaca.uniqueServerId,'bundle-test-uid');
+    assert.ok(mp.get(101,'yacaOwner').config.ui.connectionOverlay.imageUrl.startsWith('data:image/svg+xml;base64,'));
     assert.ok(props.yacaOwner&&props.yacaPeer);
     plugin.stop();
     console.log('BUNDLED_PLUGIN_OK');
