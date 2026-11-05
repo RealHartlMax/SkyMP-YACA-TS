@@ -51,7 +51,7 @@ async function main() {
   fs.mkdirSync(pluginDir,{recursive:true});
   for(const name of ['server.js','plugin.json'])fs.copyFileSync(path.join(root,'dist','plugin',name),path.join(pluginDir,name));
   fs.cpSync(path.join(root,'dist','plugin','assets'),path.join(pluginDir,'assets'),{recursive:true});
-  fs.cpSync(path.join(root,'dist/plugin/Runtime'),path.join(pluginDir,'Runtime'),{recursive:true});
+  fs.cpSync(path.join(root,'dist/plugin/client'),path.join(pluginDir,'client'),{recursive:true});
   const config=JSON.parse(fs.readFileSync(path.join(root,'config.json'),'utf8'));
   config.yaca.uniqueServerId='isolated-plugin-test-uid';
   fs.writeFileSync(path.join(pluginDir,'config.json'),JSON.stringify(config));

@@ -1,5 +1,9 @@
 # YACA Voice als SkyMP-Plugin installieren
 
+<!-- plugin-doc-languages -->
+[Deutsch](i18n/de/docs/PLUGIN-INSTALL.md) · [English](i18n/en/docs/PLUGIN-INSTALL.md) · [Русский](i18n/ru/docs/PLUGIN-INSTALL.md)
+<!-- /plugin-doc-languages -->
+
 Für den geprüften SkyMP-Fork ist keine Änderung an Servercode oder `gamemode.js`
 erforderlich. Der Verbindungshinweis und der lokale YACA-Transport sind im
 Serverskript enthalten. Die dauerhafte Reichweitenanzeige verwendet die
@@ -62,9 +66,11 @@ Serverskript enthalten. Die dauerhafte Reichweitenanzeige verwendet die
    `D:/GitHub/SkyMP-UI-Core`, insbesondere `docs/CLIENT_DEPLOYMENT.md`. YACA
    registriert `skymp-yaca-ts:voice-range` als Status-Widget unten rechts. Der
    aktualisierte UI-Core-Renderer zeigt es im selben Runensiegel-/Ringstil wie
-   Metabolism. YACA liefert Reichweite, Mute-/Unmute- und Sprechstatus; auch bei
-   gesperrter Reichweite bleibt der Mikrofonstatus sichtbar. Dafür später das
-   YACA-Serverplugin und das UI-Core-Runtime-Paket gemeinsam aktualisieren.
+   Metabolism. YACA liefert Reichweite, Mute-/Unmute- und Sprechstatus; der Ring
+   zeigt die Reichweite relativ zum größten Wert in `voiceRanges.ranges`, der
+   Status erscheint als Farbe von Rune und Ring und bleibt auch bei gesperrter
+   Reichweite sichtbar. Dafür später das YACA-Serverplugin und das
+   UI-Core-Runtime-Paket gemeinsam aktualisieren.
    Position und Skalierung kann der Spieler mit `/UiEdit` ändern.
    Auch wenn UI Core später startet, versucht YACA die Registrierung bei den
    folgenden Zustandsmeldungen erneut. Ohne UI Core fehlen nur diese Anzeige

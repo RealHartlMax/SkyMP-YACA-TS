@@ -55,7 +55,6 @@ const destination = path.join(root, 'dist', 'plugin');
 fs.mkdirSync(destination, { recursive: true });
 fs.writeFileSync(path.join(destination, 'server.js'), entry);
 fs.writeFileSync(path.join(destination, 'plugin.json'), JSON.stringify(manifest, null, 2) + '\n');
-fs.cpSync(path.join(root, 'Runtime'), path.join(destination, 'Runtime'), { recursive: true });
 fs.copyFileSync(path.join(root, 'config.json'), path.join(destination, 'config.json'));
 fs.cpSync(path.join(root, 'assets'), path.join(destination, 'assets'), { recursive: true });
 fs.copyFileSync(path.join(root, 'tools', 'plugin-state.cjs'), path.join(destination, 'set-enabled.cjs'));

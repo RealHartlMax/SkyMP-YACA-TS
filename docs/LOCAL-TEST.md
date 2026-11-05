@@ -1,5 +1,9 @@
 # Lokal bauen und testen
 
+<!-- plugin-doc-languages -->
+[Deutsch](i18n/de/docs/LOCAL-TEST.md) · [English](i18n/en/docs/LOCAL-TEST.md) · [Русский](i18n/ru/docs/LOCAL-TEST.md)
+<!-- /plugin-doc-languages -->
+
 ## Oberfläche sofort ansehen
 
 Im Repository:
@@ -34,10 +38,12 @@ TeamSpeak mit YACA-Plugin und passende TeamSpeak-Kanal-IDs.
    und Außenzellengrenzen prüfen. **V** mehrfach antippen, ohne F8 zu öffnen:
    Reichweite und UI-Core-Anzeige müssen mitwechseln. Gedrückthalten schaltet nur
    einmal. Zusätzlich Numpad +/− und die serverseitige Reichweitensperre prüfen.
-   TeamSpeak-Mikrofon stumm- und wieder einschalten: Das Runensiegel muss
-   „Mikrofon stumm“ bzw. „Mikrofon aktiv“ zeigen, auch bei gesperrter Reichweite.
-   Bei aktivem Sprechen erscheint „Du sprichst“. Mikrofon-/Ton-Mute oder
-   deaktivierte Audiogeräte dürfen keinen Sprechstatus anzeigen. Mit `/UiEdit`
+   Der Ring muss der Reichweite folgen (größter Wert aus `voiceRanges.ranges`
+   = voller Ring, z. B. 20 von 40 m = halber Ring). TeamSpeak-Mikrofon stumm-
+   und wieder einschalten: Rune und Ring müssen orange bzw. wieder gold werden,
+   auch bei gesperrter Reichweite. Bei aktivem Sprechen werden sie grün; das
+   Siegel darf dabei nicht springen. Mikrofon-/Ton-Mute oder deaktivierte
+   Audiogeräte dürfen keinen Sprechstatus (Grün) anzeigen. Mit `/UiEdit`
    Reichweite und Metabolism-Anzeigen verschieben und skalieren; das gespeicherte
    Layout muss erhalten bleiben. Die Darstellung liegt im UI-Core-Repository,
    die Statusdaten im YACA-Adapter `src/uiCoreAdapter.ts`.

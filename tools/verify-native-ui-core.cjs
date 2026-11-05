@@ -15,10 +15,10 @@ async function main() {
   fs.mkdirSync(corePlugin,{recursive:true});fs.mkdirSync(voicePlugin,{recursive:true});
   for(const file of ['index.cjs','plugin.json','config.json']) fs.copyFileSync(path.join(coreRoot,'release/SkyMPUICore',file),path.join(corePlugin,file));
   fs.cpSync(path.join(coreRoot,'release/SkyMPUICore/locales'),path.join(corePlugin,'locales'),{recursive:true});
-  fs.cpSync(path.join(coreRoot,'release/SkyMPUICore/Runtime'),path.join(corePlugin,'Runtime'),{recursive:true});
+  fs.cpSync(path.join(coreRoot,'release/SkyMPUICore/client'),path.join(corePlugin,'client'),{recursive:true});
   for(const file of ['server.js','plugin.json'])fs.copyFileSync(path.join(root,'dist/plugin',file),path.join(voicePlugin,file));
   fs.cpSync(path.join(root,'dist/plugin/assets'),path.join(voicePlugin,'assets'),{recursive:true});
-  fs.cpSync(path.join(root,'dist/plugin/Runtime'),path.join(voicePlugin,'Runtime'),{recursive:true});
+  fs.cpSync(path.join(root,'dist/plugin/client'),path.join(voicePlugin,'client'),{recursive:true});
   const config = JSON.parse(fs.readFileSync(path.join(root,'config.json'),'utf8'));
   config.yaca.uniqueServerId='native-ui-core-test';
   fs.writeFileSync(path.join(voicePlugin,'config.json'),JSON.stringify(config));

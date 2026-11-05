@@ -1,5 +1,9 @@
 # SkyMP YACA TS
 
+<!-- plugin-doc-languages -->
+[Deutsch](docs/i18n/de/README.md) · [English](docs/i18n/en/README.md) · [Русский](docs/i18n/ru/README.md)
+<!-- /plugin-doc-languages -->
+
 > Stand 29.10.2026: Der neue [Plugin Runtime Loader](docs/PLUGIN_RUNTIME.md) liefert Plugin-Clientcode und UI über signierte Pakete vom Gameserver. Die gemeinsame Runtime und der Launcher benötigen einmalig den generischen Bootstrap; danach bleiben kompatible Plugin-Updates im Plugin-Projekt. Die folgende ältere Build-/Integrationsbeschreibung gilt nur, soweit sie dem neuen Vertrag nicht widerspricht. Diese Änderung wurde ausschließlich im Quellcode umgesetzt; neue Builds, ZIPs und Spielabnahmen stehen noch aus.
 
 YACA-/TeamSpeak-Plugin für den SkyMP-Fork mit SkyrimPlatform-Browser.
@@ -11,10 +15,16 @@ die dauerhafte Reichweitenanzeige verwendet **SkyMP UI Core**.
 Die Reichweitenanzeige erhält dort denselben Runensiegel-/Ringstil wie die
 Metabolism-Anzeigen und lässt sich mit `/UiEdit` verschieben und skalieren.
 YACA liefert nur die Daten: Reichweite, Mikrofon aktiv/stumm/deaktiviert,
-Tonstatus und Sprechstatus. Mute-/Unmute-Meldungen von TeamSpeak/YACA erscheinen
-automatisch im HUD, auch bei gesperrter Reichweite. Während Mikrofon oder Ton
-stumm/deaktiviert sind, zeigt das HUD keinen Sprechstatus. Die F8-Einstellungen
-enthalten weiterhin die Tastenhinweise; die Verbindungswarnung gehört zu YACA.
+Tonstatus und Sprechstatus. Im Siegel steht die Reichweite, z. B. „8 / 40 m“;
+der Ring darum zeigt sie im Verhältnis zur größten Reichweite aus
+`voiceRanges.ranges` (voller Ring = größter Wert, halber Ring = 50 %).
+Mute-/Unmute-Meldungen von TeamSpeak/YACA färben Rune und Ring automatisch, auch
+bei gesperrter Reichweite: Gold aktiv, Grün beim Sprechen, Orange bei
+stummem/deaktiviertem Mikrofon oder Ton und ohne TeamSpeak. Während Mikrofon oder
+Ton stumm/deaktiviert sind, zeigt das HUD keinen Sprechstatus. Unter dem Siegel
+steht kein Statustext mehr; das Element bleibt beim Sprechen an seiner Position.
+Die F8-Einstellungen enthalten weiterhin die Tastenhinweise; die
+Verbindungswarnung gehört zu YACA.
 Diese Anpassung ist als Quelle vorbereitet und benötigt später einen Build des
 YACA-Serverplugins und des UI-Core-Runtime-Pakets.
 

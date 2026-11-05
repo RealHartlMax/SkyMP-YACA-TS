@@ -19,6 +19,8 @@ export interface VoiceUiApi {
 
 export const VOICE_WIDGET = "skymp-yaca-ts:voice-range";
 const OWNER = "skymp-yaca-ts";
+// UI Core reads at most two decimals on each side of a "<range>/<max> m" meter.
+const meters = (value: number) => String(Math.round(value * 100) / 100);
 
 export function createVoiceUi(config: YacaBridgeConfig, provider: () => VoiceUiApi | undefined =
   () => (globalThis as typeof globalThis & { skympUi?: VoiceUiApi }).skympUi) {
@@ -56,8 +58,10 @@ export function createVoiceUi(config: YacaBridgeConfig, provider: () => VoiceUiA
         if (online && soundMuted) details.push(state.soundDisabled ? "Ton deaktiviert" : "Ton stumm");
         if (speaking) details.push("Du sprichst");
         if (!state.rangeChangeAllowed) details.push("Reichweite gesperrt");
+        const ranges = config.voiceRanges.ranges;
         const widgetState = {
-          schemaVersion: 1, label: "Stimme", value: config.voiceRanges.ranges[state.rangeIndex] + " m",
+          // UI Core draws the fraction as a ring: the largest configured range is the full ring.
+          schemaVersion: 1, label: "Stimme", value: meters(ranges[state.rangeIndex]) + "/" + meters(Math.max(...ranges)) + " m",
           text: details.join(" · "),
           tone: !online || muted || soundMuted ? "warning" : speaking ? "success" : "info",
         } as const;

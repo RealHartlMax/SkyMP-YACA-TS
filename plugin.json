@@ -6,5 +6,5 @@
   "description": "YACA / TeamSpeak proximity voice with UI Core range display and a configurable connection notice.",
   "main": "server.js",
   "optional": true,
-  "runtime": "Runtime/manifest.json"
+  "runtime": "client/manifest.json"
 }

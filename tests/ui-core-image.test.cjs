@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
 const { fixture } = require('./fixture.cjs');
 const { connectionImage } = require('../dist/connectionImage');
-const { VOICE_WIDGET } = require('../dist/uiCoreAdapter');
+const { VOICE_WIDGET, createVoiceUi } = require('../dist/uiCoreAdapter');
 
 test('registers and updates a private UI Core widget even when UI Core starts later', () => {
   const definitions = [], updates = [], visibility = [], removed = [];
@@ -19,20 +19,34 @@ test('registers and updates a private UI Core widget even when UI Core starts la
   assert.equal(definitions[0].id,VOICE_WIDGET);
   assert.equal(definitions[0].defaultPosition,'bottom-right');
   assert.deepEqual(updates.at(-1).target,{actorId:101});
-  assert.equal(updates.at(-1).state.value,'3 m');
+  assert.equal(updates.at(-1).state.value,'3/40 m');
   const updateCount = updates.length;
   f.event(101,{type:'ready'});
   assert.equal(updates.length,updateCount); // Repeated identical ready/heartbeat state is coalesced.
   f.event(101,{type:'action',action:'cycleRange',value:1,actorId:102});
   assert.equal(definitions.length,1);
   assert.deepEqual(updates.at(-1).target,{actorId:101});
-  assert.equal(updates.at(-1).state.value,'8 m');
+  assert.equal(updates.at(-1).state.value,'8/40 m');
   assert.match(updates.at(-1).state.text,/TeamSpeak verbinden/);
   f.controller.setVoiceRangeChangeAllowed(101,false);
   assert.match(updates.at(-1).state.text,/gesperrt/);
   assert.equal(visibility.at(-1).visible,true);
   f.controller.dispose();
   assert.deepEqual(removed,[{owner:'skymp-yaca-ts',id:VOICE_WIDGET}]);
+});
+
+test('the largest configured voice range is the full ring of the UI Core seal', () => {
+  const updates = [];
+  const api = { apiVersion:1, getStatus:()=>({ready:true,frontendProtocol:1}), registerWidget:()=>{},
+    updateWidget:(target,id,state)=>updates.push(state), setWidgetVisible:()=>{}, unregisterWidget:()=>{} };
+  const ui = createVoiceUi({voiceRanges:{ranges:[2,7.5,12.345],defaultIndex:0}},()=>api);
+  const state = {actorId:101,pluginState:'IN_INGAME_CHANNEL',clientId:11,talking:false,microphoneMuted:false,
+    microphoneDisabled:false,soundMuted:false,soundDisabled:false,rangeIndex:1,rangeChangeAllowed:true};
+  ui.update(state);
+  assert.equal(updates.at(-1).value,'7.5/12.35 m');
+  ui.update({...state,rangeIndex:2});
+  assert.equal(updates.at(-1).value,'12.35/12.35 m');
+  ui.dispose();
 });
 
 test('voice HUD follows mute and unmute reports, including a locked range and disabled audio', () => {
@@ -88,7 +102,7 @@ test('UI Core errors identify the failed API call and transient failures are ret
   assert.match(warnings.at(-1),/\[updateWidget\]: Target is not an authenticated player/);
   unavailable = false;
   f.event(101,{type:'ready'});
-  assert.equal(updates.at(-1).value,'3 m');
+  assert.equal(updates.at(-1).value,'3/40 m');
   f.controller.dispose();
 });
 

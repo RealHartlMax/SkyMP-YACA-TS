@@ -10,8 +10,8 @@ try {
     foreach ($required in @('dist/yacaBridge.js', 'dist/yacaBridge.d.ts', 'dist/ui/overlay.js', 'dist/plugin/server.js', 'dist/plugin/plugin.json')) {
         if (-not (Test-Path -LiteralPath (Join-Path $taskRoot $required))) { throw "Build artifact missing: $required" }
     }
-    & node -e "require('./tools/plugin-runtime/package.cjs').verifyRuntimePackage('dist/plugin/Runtime', require('./dist/plugin/plugin.json'))"
-    if ($LASTEXITCODE -ne 0) { throw 'Sign the plugin Runtime before release packaging.' }
+    & node -e "require('./tools/plugin-runtime/package.cjs').verifyRuntimePackage('dist/plugin/client', require('./dist/plugin/plugin.json'))"
+    if ($LASTEXITCODE -ne 0) { throw 'Plugin client package failed verification.' }
     try { $zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('Europe/Berlin') }
     catch { $zone = [System.TimeZoneInfo]::FindSystemTimeZoneById('W. Europe Standard Time') }
     $stamp = [System.TimeZoneInfo]::ConvertTime([System.DateTimeOffset]::UtcNow, $zone).ToString('yyyy-MM-dd-HHmmss')
@@ -36,7 +36,7 @@ try {
     $pluginsDir = Join-Path $installRoot 'Plugins'
     $pluginDir = Join-Path $pluginsDir 'skymp-yaca-ts'
     New-Item -ItemType Directory -Path $pluginDir -Force | Out-Null
-    foreach ($item in @('server.js','plugin.json','config.json','set-enabled.cjs','assets','Runtime')) {
+    foreach ($item in @('server.js','plugin.json','config.json','set-enabled.cjs','assets','client')) {
         Copy-Item -LiteralPath (Join-Path $taskRoot "dist/plugin/$item") -Destination $pluginDir -Recurse
     }
     Copy-Item -LiteralPath (Join-Path $taskRoot 'docs/PLUGIN-INSTALL.md') -Destination (Join-Path $pluginDir 'README.md')

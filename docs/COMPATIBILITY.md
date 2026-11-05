@@ -1,5 +1,9 @@
 # Prüfung und lokaler Teststand
 
+<!-- plugin-doc-languages -->
+[Deutsch](i18n/de/docs/COMPATIBILITY.md) · [English](i18n/en/docs/COMPATIBILITY.md) · [Русский](i18n/ru/docs/COMPATIBILITY.md)
+<!-- /plugin-doc-languages -->
+
 Fortgeschrieben am 28.10.2026 gegen die lokalen Checkouts
 `D:\GitHub\skymp` und `D:\GitHub\SkyMP-UI-Core`. Maßgeblich sind die
 Dateihashes in den aktuellen Prüfbefunden; Änderungen liegen lokal im
